@@ -7,6 +7,7 @@
                  [org.clojure/clojurescript "0.0-2138"]
                  [org.clojure/core.async "0.1.267.0-0d7780-alpha"]
                  [org.clojure/core.match "0.2.1"]
+                 [hiccup "1.0.5"]
                  [om "0.3.0"]
                  [sablono "0.2.3"]
                  [riddley "0.1.6"]
@@ -18,6 +19,7 @@
                    :plugins [[com.cemerick/austin "0.1.4-SNAPSHOT"]]
                    :source-paths ["dev"]}}
   :plugins [[lein-cljsbuild "1.0.1"]]
+  :source-paths ["src" "test"]
   :cljsbuild {:builds
               [{:id "dev"
                 :source-paths ["src" "test"]

@@ -8,6 +8,7 @@
    [dommy.core :as dom])
   (:require-macros
    [dommy.macros :refer [node sel1]]
+   [runner :as runner]
    [cljs.core.match.macros :refer [match]]))
 
 (defn reset []
@@ -55,9 +56,11 @@
     (dom/append! js/document.body container)
     (om/root {:examples [{:title "pie chart"
                           :f pie-chart
-                          :animate false}
+                          :animate false
+                          :code (runner/escape-code draw-pie-chart pie-chart)}
                          {:title "bezier"
-                          :f bezier}]
+                          :f bezier
+                          :code (runner/escape-code bezier)}]
               :active nil}
       (fn [data owner]
         (reify
@@ -65,7 +68,15 @@
           (render-state [_ _]
             (html [:div
                    [:h1 "processing.cljs"]
+                   [:p "thin ClojureScript veneer over "
+                    [:a {:href "http://www.processingjs.org"}
+                     "processing.js"]]
                    [:div#content
+                    [:h3 "usage "
+                     [:small "based on: "
+                      [:a {:href "http://processing.org/examples"}
+                       "http://processing.org/examples"]]]
+                    
                     (when (:active data)
                       (om/build canvas/canvas data))]
                    [:ul.list-unstyled
@@ -76,6 +87,5 @@
                                  (str "#" ))
                             :on-click
                             (fn [e] (om/update! data assoc :active example))}
-                        [:h3 title]]])]
-                   ]))))
+                        [:h5 title]]])]]))))
       container)))

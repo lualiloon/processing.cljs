@@ -192,5 +192,4 @@
           (setup-and-draw data owner node)))
       om/IRenderState
       (render-state [_ state]
-        (html [:canvas {:id title
-                        :ref "canvas"}])))))
+        (html [:canvas {:id title :ref "canvas"}])))))
