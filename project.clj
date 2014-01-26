@@ -26,8 +26,19 @@
                            :source-map "resources/public/js/main.js.map"
                            :source-map-path "resources/public/js/out"
                            :optimizations :none}}
-               {:id "prod"
+               {:id "examples"
                 :source-paths ["src" "test"]
+                :compiler {:output-to "resources/public/js/main.js"
+                           :optimizations :advanced
+                           :pretty-print false
+                           :preamble
+                           ["react/react.min.js"
+                            "resources/public/js/processing-1.4.1.js"]
+                           :externs
+                           ["react/externs/react.js"
+                            "resources/public/js/processing-1.4.1.js"]}}
+               {:id "prod"
+                :source-paths ["src"]
                 :compiler {:output-to "resources/public/js/main.js"
                            :optimizations :advanced
                            :pretty-print false

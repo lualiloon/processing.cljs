@@ -89,7 +89,8 @@
   [[prop orig]]
   `(defmacro ~(symbol prop) [& args#]
      (let [orig# ~orig]
-       `((aget (:processing (deref processing-state)) ~orig#) ~@args#))))
+       `((aget (js/Processing.getInstanceById
+                (:active (deref processing-state))) ~orig#) ~@args#))))
 
 (defmacro gen-processing-inline-accessors []
   `(do ~@(clojure.core/map gen-processing-inline-accessor externs)))

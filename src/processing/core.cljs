@@ -3,7 +3,7 @@
             [sablono.core :as html :refer [html] :include-macros true])
   (:require-macros [processing.core :as canvas]))
 
-(def processing-state (atom {:canvas nil :processing nil}))
+(def processing-state (atom {:active nil}))
 
 (defprotocol ICanvas
   (setup [canvas])
@@ -107,72 +107,90 @@
   {:key (str (.-key processing))
    :key-code (.-keyCode processing)})
 
+(def refresh-queued false)
+
+(defn setup-and-draw
+  [data owner node]
+  (let [{:keys [title f animate]} (:active data)
+        state (atom {})
+        processing (js/Processing. node)
+        canvas (f processing state)]
+
+    (assert (satisfies? ICanvas canvas)
+            "Reified canvas must implement ICanvas")
+    
+    (reset! processing-state {:active title})
+    
+    (set! (.-name processing) title)
+    (set! (.-draw processing)
+          (fn []
+            (draw canvas
+                  (merge (om/get-state owner)
+                         @state
+                         {:width (.-width processing)
+                          :height (.-height processing)
+                          :focused (.-focused processing)
+                          :online (.-online processing)
+                          :screen (.-screen processing)
+                          :frame-count (.-frameCount processing)})
+                  (mouse processing)
+                  (keyboard processing))))
+    (set! (.-setup processing) (fn [] (setup canvas)))
+    (set! (.-keyTyped processing)
+          (fn [] (key-typed canvas (keyboard processing))))
+    (set! (.-keyReleased processing)
+          (fn [] (key-released canvas (keyboard processing))))
+    (set! (.-keyPressed processing)
+          (fn [] (key-pressed canvas (keyboard processing))))
+    (set! (.-mouseReleased processing)
+          (fn [] (mouse-released canvas (mouse processing))))
+    (set! (.-mousePressed processing)
+          (fn [] (mouse-pressed canvas (mouse processing))))
+    (set! (.-mouseOut processing)
+          (fn [] (mouse-out canvas (mouse processing))))
+    (set! (.-mouseOver processing)
+          (fn [] (mouse-over canvas (mouse processing))))
+    (set! (.-mouseClicked processing)
+          (fn [] (mouse-clicked canvas (mouse processing))))
+    (set! (.-mouseDragged processing)
+          (fn [] (mouse-dragged canvas (mouse processing))))
+    (set! (.-mouseScrolled processing)
+          (fn [] (mouse-scrolled canvas (mouse processing))))
+    (set! (.-mouseMoved processing)
+          (fn [] (mouse-moved canvas (mouse processing))))
+    (set! (.-touchStart processing) (fn [] (touch-start canvas)))
+    (set! (.-touchEnd processing) (fn [] (touch-end canvas)))
+    (set! (.-touchMove processing) (fn [] (touch-move canvas)))
+    (set! (.-touchCancel processing) (fn [] (touch-cancel canvas)))
+    
+    (reset! state (setup canvas))
+    
+    (if (false? animate)
+      ((.-draw processing))
+      (do (set! refresh-queued false)
+          (if (exists? js/requestAnimationFrame)
+            ((fn render []
+               (when-not ^boolean refresh-queued
+                         (js/requestAnimationFrame render)
+                         ((.-draw processing)))))
+            ((fn render []
+               (when-not ^boolean refresh-queued
+                         (js/setTimeout 16 render)
+                         ((.-draw processing))))))))))
+
 (defn canvas
-  [value f target & {:keys [animate] :as opts}]
-  (om/root value
-    (fn [data owner]
-      (reify
-        om/IDidMount
-        (did-mount [_ node]
-          (let [state (atom (if (instance? Atom value)
-                              @value
-                              value))
-                processing (js/Processing. node)
-                canvas (f processing state)]
-            (assert (satisfies? ICanvas canvas)
-                    "Reified canvas must implement ICanvas")
-            (swap! processing-state assoc :processing processing)
-            (swap! processing-state assoc :canvas canvas)
-            (set! (.-draw processing)
-                  (fn []
-                    (draw canvas
-                          (merge @state
-                                 {:width (.-width processing)
-                                  :height (.-height processing)
-                                  :focused (.-focused processing)
-                                  :online (.-online processing)
-                                  :screen (.-screen processing)
-                                  :frame-count (.-frameCount processing)})
-                          (mouse processing)
-                          (keyboard processing))))
-            (set! (.-setup processing) (fn [] (setup canvas)))
-            (set! (.-keyTyped processing)
-                  (fn [] (key-typed canvas (keyboard processing))))
-            (set! (.-keyReleased processing)
-                  (fn [] (key-released canvas (keyboard processing))))
-            (set! (.-keyPressed processing)
-                  (fn [] (key-pressed canvas (keyboard processing))))
-            (set! (.-mouseReleased processing)
-                  (fn [] (mouse-released canvas (mouse processing))))
-            (set! (.-mousePressed processing)
-                  (fn [] (mouse-pressed canvas (mouse processing))))
-            (set! (.-mouseOut processing)
-                  (fn [] (mouse-out canvas (mouse processing))))
-            (set! (.-mouseOver processing)
-                  (fn [] (mouse-over canvas (mouse processing))))
-            (set! (.-mouseClicked processing)
-                  (fn [] (mouse-clicked canvas (mouse processing))))
-            (set! (.-mouseDragged processing)
-                  (fn [] (mouse-dragged canvas (mouse processing))))
-            (set! (.-mouseScrolled processing)
-                  (fn [] (mouse-scrolled canvas (mouse processing))))
-            (set! (.-mouseMoved processing)
-                  (fn [] (mouse-moved canvas (mouse processing))))
-            (set! (.-touchStart processing) (fn [] (touch-start canvas)))
-            (set! (.-touchEnd processing) (fn [] (touch-end canvas)))
-            (set! (.-touchMove processing) (fn [] (touch-move canvas)))
-            (set! (.-touchCancel processing) (fn [] (touch-cancel canvas)))
-            ((.-setup processing))
-            (if (false? animate)
-              ((.-draw processing))
-              (if (exists? js/requestAnimationFrame)
-                ((fn render []
-                   (js/requestAnimationFrame render)
-                   ((.-draw processing))))
-                ((fn render []
-                   (js/setTimeout 16 render)
-                   ((.-draw processing))))))))
-        om/IRenderState
-        (render-state [_ state]
-          (html [:canvas]))))
-    target))
+  [data owner]
+  (let [{:keys [title f animate]} (:active data)]
+    (reify
+      om/IDidMount
+      (did-mount [_ node]
+        (setup-and-draw data owner node))
+      om/IDidUpdate
+      (did-update [_ _ _ _]
+        (when-let [node (om/get-node owner "canvas")]
+          (set! refresh-queued true)
+          (setup-and-draw data owner node)))
+      om/IRenderState
+      (render-state [_ state]
+        (html [:canvas {:id title
+                        :ref "canvas"}])))))

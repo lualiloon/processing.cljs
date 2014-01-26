@@ -14,23 +14,20 @@
   (js/location.reload true))
 
 (defn bezier
-  []
-  (canvas/canvas {}
-    (fn [processing state]
-      (reify
-        canvas/ICanvas
-        (setup [_]
-          (canvas/size 640 360)
-          (canvas/stroke 255)
-          (canvas/no-fill))
-        (draw [_ _ {:keys [x] :as mouse} {:keys [key key-code] :as kb}]
-          (canvas/background 0)
-          (loop [i 0]
-            (when (< i 200)
-              (canvas/bezier (- x (/ i 2.0)) (+ 40 i) 410 20 440 300
-                             (- 240 (/ i 16.0)) (+ 300 (/ i 8.0)))
-              (recur (+ i 20)))))))
-    (sel1 :#content)))
+  [processing state]
+  (reify
+    canvas/ICanvas
+    (setup [_]
+      (canvas/size 640 360)
+      (canvas/stroke 255)
+      (canvas/no-fill))
+    (draw [_ _ {:keys [x] :as mouse} {:keys [key key-code] :as kb}]
+      (canvas/background 0)
+      (loop [i 0]
+        (when (< i 200)
+          (canvas/bezier (- x (/ i 2.0)) (+ 40 i) 410 20 440 300
+                         (- 240 (/ i 16.0)) (+ 300 (/ i 8.0)))
+          (recur (+ i 20)))))))
 
 (defn draw-pie-chart
   [diameter {:keys [angles width height] :as state}]
@@ -42,44 +39,43 @@
       (recur (inc i) (+ last-angle (canvas/radians (aget angles i)))))))
 
 (defn pie-chart
-  []
-  (canvas/canvas {:angles #js [30 10 45 35 60 38 75 67]}
-    (fn [processing state]
-      (reify
-        canvas/ICanvas
-        (setup [_]
-          (canvas/size 640 360)
-          (canvas/no-stroke)
-          (canvas/no-loop))
-        (draw [_ state _ _]
-          (canvas/background 100)
-          (draw-pie-chart 300 state))))
-    (sel1 :#content)
-    :animate false))
+  [processing state]
+  (reify
+    canvas/ICanvas
+    (setup [_]
+      (canvas/size 640 360)
+      (canvas/no-stroke)
+      {:angles #js [30 10 45 35 60 38 75 67]})
+    (draw [_ state _ _]
+      (canvas/background 100)
+      (draw-pie-chart 300 state))))
 
 (defn ^:export -main []
   (let [container (node [:div.container])]
     (dom/append! js/document.body container)
-
     (om/root {:examples [{:title "pie chart"
-                          :f pie-chart}
+                          :f pie-chart
+                          :animate false}
                          {:title "bezier"
-                          :f bezier}
-                         {:title "bezier"
-                          :f bezier}
-                         {:title "bezier"
-                          :f bezier}]}
+                          :f bezier}]
+              :active nil}
       (fn [data owner]
-        (om/component
-          (html [:div.container
-                 [:h1 "processing.cljs"]
-                 [:ul.list-unstyled.pull-left
-                  (for [{:keys [title f]} (:examples data)]
-                    [:li
-                     [:a {:href (->> (clojure.string/replace title #"\s" "_")
-                                     (str "#" ))
-                          :on-click (fn [e]
-                                      (f))}
-                      [:h3 title]]])]
-                 [:div#content.pull-right]])))
+        (reify
+          om/IRenderState
+          (render-state [_ _]
+            (html [:div
+                   [:h1 "processing.cljs"]
+                   [:div#content
+                    (when (:active data)
+                      (om/build canvas/canvas data))]
+                   [:ul.list-unstyled
+                    (for [{:keys [title f] :as example} (:examples data)]
+                      [:li
+                       [:a {:href
+                            (->> (clojure.string/replace title #"\s" "_")
+                                 (str "#" ))
+                            :on-click
+                            (fn [e] (om/update! data assoc :active example))}
+                        [:h3 title]]])]
+                   ]))))
       container)))
