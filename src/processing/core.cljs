@@ -71,6 +71,14 @@
   default
   (mouse-dragged [_ _] nil))
 
+(extend-protocol IMouseOut
+  default
+  (mouse-out [_ _] nil))
+
+(extend-protocol IMouseOver
+  default
+  (mouse-over [_ _] nil))
+
 (extend-protocol IKeyPressed
   default
   (key-pressed [_ _] nil))
@@ -141,4 +149,3 @@
         (render-state [_ state]
           (html [:canvas]))))
     target))
-
