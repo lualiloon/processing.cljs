@@ -33,11 +33,11 @@
 (defn draw-pie-chart
   [diameter {:keys [angles width height] :as state}]
   (loop [i 0 last-angle 0]
-    (when (< i (alength angles))
-      (canvas/fill (canvas/map i 0 (alength angles) 0 255))
+    (when (< i (count angles))
+      (canvas/fill (canvas/map i 0 (count angles) 0 255))
       (canvas/arc (/ width 2) (/ height 2) diameter diameter last-angle
-                  (+ last-angle (canvas/radians (aget angles i))))
-      (recur (inc i) (+ last-angle (canvas/radians (aget angles i)))))))
+                  (+ last-angle (canvas/radians (nth angles i))))
+      (recur (inc i) (+ last-angle (canvas/radians (nth angles i)))))))
 
 (defn pie-chart
   [processing state]
@@ -46,7 +46,7 @@
     (setup [_]
       (canvas/size 640 360)
       (canvas/no-stroke)
-      {:angles #js [30 10 45 35 60 38 75 67]})
+      {:angles [30 10 45 35 60 38 75 67]})
     (draw [_ state _ _]
       (canvas/background 100)
       (draw-pie-chart 300 state))))
@@ -77,15 +77,23 @@
                       [:a {:href "http://processing.org/examples"}
                        "http://processing.org/examples"]]]
                     
-                    (when (:active data)
-                      (om/build canvas/canvas data))]
-                   [:ul.list-unstyled
-                    (for [{:keys [title f] :as example} (:examples data)]
-                      [:li
-                       [:a {:href
-                            (->> (clojure.string/replace title #"\s" "_")
-                                 (str "#" ))
-                            :on-click
-                            (fn [e] (om/update! data assoc :active example))}
-                        [:h5 title]]])]]))))
+                    [:div.row
+                     [:div.col-lg-1
+                      [:ul.list-unstyled
+                       (for [{:keys [title f] :as example} (:examples data)]
+                         [:li
+                          [:a {:style {:cursor "pointer"}
+                               :on-click
+                               (fn [e]
+                                 (om/update! data assoc :active example))}
+                           [:h5 title]]])]]
+                     [:div.col-lg-11
+                      (if (:active data)
+                        (om/build canvas/canvas data)
+                        [:canvas {:style {:width 640
+                                          :height 360
+                                          :background-color "#000"}}])
+                      [:pre {:style {:width 640
+                                     :border-radius "0px"
+                                     :border "none"}}]]]]]))))
       container)))
