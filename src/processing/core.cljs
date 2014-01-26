@@ -7,7 +7,7 @@
 
 (defprotocol ICanvas
   (setup [canvas])
-  (draw [canvas mouse keyboard]))
+  (draw [canvas state mouse keyboard]))
 
 (defprotocol IKeyPressed
   (key-pressed [canvas keyboard]))
@@ -108,21 +108,33 @@
    :key-code (.-keyCode processing)})
 
 (defn canvas
-  [value f target]
+  [value f target & {:keys [animate] :as opts}]
   (om/root value
     (fn [data owner]
       (reify
         om/IDidMount
         (did-mount [_ node]
-          (let [processing (js/Processing. node)
-                canvas (f processing)]
+          (let [state (atom (if (instance? Atom value)
+                              @value
+                              value))
+                processing (js/Processing. node)
+                canvas (f processing state)]
             (assert (satisfies? ICanvas canvas)
                     "Reified canvas must implement ICanvas")
             (swap! processing-state assoc :processing processing)
             (swap! processing-state assoc :canvas canvas)
             (set! (.-draw processing)
                   (fn []
-                    (draw canvas (mouse processing) (keyboard processing))))
+                    (draw canvas
+                          (merge @state
+                                 {:width (.-width processing)
+                                  :height (.-height processing)
+                                  :focused (.-focused processing)
+                                  :online (.-online processing)
+                                  :screen (.-screen processing)
+                                  :frame-count (.-frameCount processing)})
+                          (mouse processing)
+                          (keyboard processing))))
             (set! (.-setup processing) (fn [] (setup canvas)))
             (set! (.-keyTyped processing)
                   (fn [] (key-typed canvas (keyboard processing))))
@@ -151,9 +163,15 @@
             (set! (.-touchMove processing) (fn [] (touch-move canvas)))
             (set! (.-touchCancel processing) (fn [] (touch-cancel canvas)))
             ((.-setup processing))
-            ((fn render []
-              (js/requestAnimationFrame render)
-              ((.-draw processing))))))
+            (if (false? animate)
+              ((.-draw processing))
+              (if (exists? js/requestAnimationFrame)
+                ((fn render []
+                   (js/requestAnimationFrame render)
+                   ((.-draw processing))))
+                ((fn render []
+                   (js/setTimeout 16 render)
+                   ((.-draw processing))))))))
         om/IRenderState
         (render-state [_ state]
           (html [:canvas]))))

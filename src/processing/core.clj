@@ -1,5 +1,5 @@
 (ns processing.core
-  (:refer-clojure :exclude [loop delay int print println])
+  (:refer-clojure :exclude [loop delay int print println map])
   (:require [cljs.analyzer :as ana]
             [cljs.env :as env]
             [cljs.core :as core]))
@@ -21,7 +21,7 @@
          hex unhex loadStrings saveStrings loadBytes matchAll __contains
          __replaceAll __replaceFirst __replace __equals __equalsIgnoreCase
          __toCharArray __split __codePointAt match __matches __startsWith
-         __endsWith __hashCode __printStackTrace trim
+         __endsWith __hashCode __printStackTrace trim map
          parseBoolean parseByte parseChar parseFloat parseInt __int_cast
          __instanceof abs ceil constrain dist exp floor lerp log mag
          norm pow round sq sqrt acos asin atan atan2 cos degrees radians
@@ -75,12 +75,14 @@
          DISABLE_ACCURATE_TEXTURES HINT_COUNT SINCOS_LENGTH PRECISIONB
          PRECISIONF PREC_MAXVAL PREC_ALPHA_SHIFT PREC_RED_SHIFT
          NORMAL_MODE_AUTO NORMAL_MODE_SHAPE NORMAL_MODE_VERTEX MAX_LIGHTS]
-       (map str)
+       (clojure.core/map str)
        (repeat 2)
-       (apply map vector)
+       (apply clojure.core/map vector)
        (filter (fn [[p1 p2]] (re-matches #"[A-Za-z]+" p1)))
-       (map (fn [[p1 p2]] [(clojure.string/replace p1 #"([A-Z])" "-$1") p2]))
-       (map (fn [[p1 p2]] [(clojure.string/lower-case p1) p2]))
+       (clojure.core/map
+        (fn [[p1 p2]] [(clojure.string/replace p1 #"([A-Z])" "-$1") p2]))
+       (clojure.core/map
+        (fn [[p1 p2]] [(clojure.string/lower-case p1) p2]))
        (remove (fn [[p1 p2]] (identical? (first p1) \-)))))
 
 (defn gen-processing-inline-accessor
@@ -90,6 +92,6 @@
        `((aget (:processing (deref processing-state)) ~orig#) ~@args#))))
 
 (defmacro gen-processing-inline-accessors []
-  `(do ~@(map gen-processing-inline-accessor externs)))
+  `(do ~@(clojure.core/map gen-processing-inline-accessor externs)))
 
 (gen-processing-inline-accessors)
