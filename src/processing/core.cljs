@@ -7,7 +7,7 @@
 
 (defprotocol ICanvas
   (setup [canvas])
-  (draw [canvas]))
+  (draw [canvas mouse keyboard]))
 
 (defprotocol IKeyPressed
   (key-pressed [canvas keyboard]))
@@ -60,7 +60,7 @@
 
 (extend-protocol IMouseClicked
   default
-  (mouse-clicked [_ mouse] (canvas/println mouse)))
+  (mouse-clicked [_ _] nil))
 
 (extend-protocol IMousePressed
   default
@@ -92,7 +92,7 @@
 
 (extend-protocol IKeyTyped
   default
-  (key-typed [_ kb] (canvas/println kb)))
+  (key-typed [_ _] nil))
 
 (defn mouse
   [processing]
@@ -100,14 +100,12 @@
    :y (.-mouseY processing)
    :pX (.-pmouseX processing)
    :pY (.-pmouseY processing)
-   :button (.-mouseButton processing)
-   :pressed? (.-mousePressed processing)})
+   :button (.-mouseButton processing)})
 
 (defn keyboard
   [processing]
   {:key (str (.-key processing))
-   :key-code (.-keyCode processing)
-   :key-pressed (.-keyPressed processing)})
+   :key-code (.-keyCode processing)})
 
 (defn canvas
   [value f target]
@@ -122,14 +120,20 @@
                     "Reified canvas must implement ICanvas")
             (swap! processing-state assoc :processing processing)
             (swap! processing-state assoc :canvas canvas)
-            (set! (.-draw processing) (fn [] (draw canvas)))
+            (set! (.-draw processing)
+                  (fn []
+                    (draw canvas (mouse processing) (keyboard processing))))
             (set! (.-setup processing) (fn [] (setup canvas)))
             (set! (.-keyTyped processing)
                   (fn [] (key-typed canvas (keyboard processing))))
             (set! (.-keyReleased processing)
                   (fn [] (key-released canvas (keyboard processing))))
+            (set! (.-keyPressed processing)
+                  (fn [] (key-pressed canvas (keyboard processing))))
             (set! (.-mouseReleased processing)
                   (fn [] (mouse-released canvas (mouse processing))))
+            (set! (.-mousePressed processing)
+                  (fn [] (mouse-pressed canvas (mouse processing))))
             (set! (.-mouseOut processing)
                   (fn [] (mouse-out canvas (mouse processing))))
             (set! (.-mouseOver processing)
@@ -146,7 +150,10 @@
             (set! (.-touchEnd processing) (fn [] (touch-end canvas)))
             (set! (.-touchMove processing) (fn [] (touch-move canvas)))
             (set! (.-touchCancel processing) (fn [] (touch-cancel canvas)))
-            (setup canvas)))
+            ((.-setup processing))
+            ((fn render []
+              (js/requestAnimationFrame render)
+              ((.-draw processing))))))
         om/IRenderState
         (render-state [_ state]
           (html [:canvas]))))
