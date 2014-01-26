@@ -7,6 +7,7 @@
                  [org.clojure/clojurescript "0.0-2138"]
                  [org.clojure/core.async "0.1.267.0-0d7780-alpha"]
                  [org.clojure/core.match "0.2.1"]
+                 [hickory "0.5.2"]
                  [hiccup "1.0.5"]
                  [om "0.3.0"]
                  [sablono "0.2.3"]

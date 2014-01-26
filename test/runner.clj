@@ -15,6 +15,36 @@
       (doall (->> (repeatedly #(read reader false eof))
                   (take-while #(not= % eof)))))))
 
-(defmacro escape-code
+(defn forms-map
+  [filename]
+  (binding [ana/*cljs-ns* 'cljs.user
+            ana/*cljs-file* filename
+            ana/*passes* (or ana/*passes*
+                             [util/elide-children
+                              util/simplify-env
+                              ana/infer-type])]
+    (->> (map #(ana/analyze (ana/empty-env) %) (read-file filename))
+         (map #(assoc %
+                 :name (clojure.string/replace (str (:name %)) "/" "")))
+         (map #(select-keys % [:name :form]))
+         (group-by :name)
+         (reduce-kv (fn [m k v] (assoc m k (:form (first v)))) {}))))
+
+(def forms (forms-map "test/runner.cljs"))
+
+(def htmlized
+  (->> (slurp "test/runner.cljs.html")
+       (re-seq #"(?s)\(<span class=\"keyword\">defn</span> <span class=\"function-name\">[\w-]+</span>.+\)\n\n")
+       (first)
+       (#(clojure.string/split % #"\n\n"))
+       (map
+        (fn [text]
+          (let [re (re-find
+                    #"<span class=\"function-name\">([\w-]+)</span>" text)
+                fn-name (second re)]
+            [fn-name text])))
+       (reduce (fn [m [fn-name text]] (assoc m fn-name text)) {})))
+
+(defmacro htmlize
   [& fns]
   )

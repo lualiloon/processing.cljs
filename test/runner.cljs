@@ -57,10 +57,10 @@
     (om/root {:examples [{:title "pie chart"
                           :f pie-chart
                           :animate false
-                          :code (runner/escape-code draw-pie-chart pie-chart)}
+                          :code (runner/htmlize draw-pie-chart pie-chart)}
                          {:title "bezier"
                           :f bezier
-                          :code (runner/escape-code bezier)}]
+                          :code (runner/htmlize bezier)}]
               :active nil}
       (fn [data owner]
         (reify
@@ -73,12 +73,12 @@
                      "processing.js"]]
                    [:div#content
                     [:h3 "usage "
-                     [:small "based on: "
+                     [:small "examples based on: "
                       [:a {:href "http://processing.org/examples"}
                        "http://processing.org/examples"]]]
                     
                     [:div.row
-                     [:div.col-lg-1
+                     [:div.col-sm-2
                       [:ul.list-unstyled
                        (for [{:keys [title f] :as example} (:examples data)]
                          [:li
@@ -87,7 +87,7 @@
                                (fn [e]
                                  (om/update! data assoc :active example))}
                            [:h5 title]]])]]
-                     [:div.col-lg-11
+                     [:div.col-sm-10
                       (if (:active data)
                         (om/build canvas/canvas data)
                         [:canvas {:style {:width 640
