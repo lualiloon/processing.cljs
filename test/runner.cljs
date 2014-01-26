@@ -1,7 +1,7 @@
 (ns runner
   (:require
    [clojure.browser.repl]
-   [processing.core :as canvas :refer [canvas] :include-macros true]
+   [processing.core :as canvas :include-macros true]
    [dommy.core :as dom])
   (:require-macros
    [dommy.macros :refer [node sel1]]))
@@ -12,12 +12,18 @@
   (js/location.reload true))
 
 (defn ^:export -main []
-  (canvas {}
+  (canvas/canvas {}
     (fn [processing]
       (reify
         canvas/ICanvas
         (setup [_]
           (canvas/size 200 200))
-        (draw [_])))
+        (draw [_])
+        canvas/IMouseOut
+        (mouse-out [_ mouse]
+          (canvas/background 140 50 80))
+        canvas/IMouseOver
+        (mouse-over [_ mouse]
+          (canvas/background 50 80 140))))
     (let [content (node [:div#content.container])]
       (dom/append! js/document.body content))))

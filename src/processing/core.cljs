@@ -1,6 +1,9 @@
 (ns processing.core
   (:require [om.core :as om :include-macros true]
-            [sablono.core :as html :refer [html] :include-macros true]))
+            [sablono.core :as html :refer [html] :include-macros true])
+  (:require-macros [processing.core :as canvas]))
+
+(def processing-state (atom {:canvas nil :processing nil}))
 
 (defprotocol ICanvas
   (setup [canvas])
@@ -57,7 +60,7 @@
 
 (extend-protocol IMouseClicked
   default
-  (mouse-clicked [_ _] nil))
+  (mouse-clicked [_ mouse] (canvas/println mouse)))
 
 (extend-protocol IMousePressed
   default
@@ -89,7 +92,7 @@
 
 (extend-protocol IKeyTyped
   default
-  (key-typed [_ _] nil))
+  (key-typed [_ kb] (canvas/println kb)))
 
 (defn mouse
   [processing]
@@ -106,18 +109,17 @@
    :key-code (.-keyCode processing)
    :key-pressed (.-keyPressed processing)})
 
-(def processing-state (atom {:canvas nil :processing nil}))
-
 (defn canvas
   [value f target]
   (om/root value
     (fn [data owner]
-      (enable-console-print!)
       (reify
         om/IDidMount
         (did-mount [_ node]
           (let [processing (js/Processing. node)
                 canvas (f processing)]
+            (assert (satisfies? ICanvas canvas)
+                    "Reified canvas must implement ICanvas")
             (swap! processing-state assoc :processing processing)
             (swap! processing-state assoc :canvas canvas)
             (set! (.-draw processing) (fn [] (draw canvas)))
