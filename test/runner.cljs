@@ -136,16 +136,19 @@
       (canvas/translate 500 (* 360 0.35) -200)
       (canvas/sphere 280)
       (canvas/pop-matrix))
-    (draw [_ _ _ _]
-      (canvas/exit))))
+    (draw [_ _ _ _])))
 
 (defn load-and-display-images
   [processing state]
   (reify canvas/ICanvas
     (setup [_]
       (canvas/size 640 360)
-      (go {:img 1}))
-    (draw [_ _ _ _])))
+      {:img
+       (canvas/load-image "http://processing.org/examples/moonwalk.jpg")})
+    (draw [_ {:keys [img height]} _ _]
+      (canvas/image img 0 0)
+      (canvas/image 0 (/ height 2) (/ (.-width img) 2) (/ (.-height img) 2))))
+  )
 
 (defn ^:export -main []
   (let [container (node [:div.container])]
@@ -159,8 +162,8 @@
                           :f create-graphics}
                          {:title "polygon"
                           :f polygon}
-                         {:title "3d primitives"
-                          :f three-dee-primitives
+                         {:title "load and display images"
+                          :f load-and-display-images
                           :animate false}]
               :active nil}
       (fn [data owner]
@@ -221,7 +224,9 @@
                              ["polygon"]
                              (runner/htmlize "draw-polygon" "polygon")
                              ["3d primitives"]
-                             (runner/htmlize "three-dee-primitives"))
+                             (runner/htmlize "three-dee-primitives")
+                             ["load and display images"]
+                             (runner/htmlize "load-and-display-images"))
                            (concat
                             ["(" [:span.keyword "ns"] " my.namespace\n  "
                              [:span.constant "(:require"]
