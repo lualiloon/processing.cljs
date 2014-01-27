@@ -74,6 +74,44 @@
       ;; function is being called
       (canvas/image ^:arg pg 120 60))))
 
+(defn draw-polygon
+  [x y radius npoints]
+  (let [TWO_PI (canvas/TWO_PI)
+        angle (/ TWO_PI npoints)]
+    (canvas/begin-shape)
+    (loop [a 0]
+      (when (< a TWO_PI)
+        (let [sx (+ x (* (Math/cos a) radius))
+              sy (+ y (* (Math/sin a) radius))]
+          (canvas/vertex sx sy)
+          (recur (+ a angle)))))
+    (canvas/end-shape (canvas/CLOSE))))
+
+(defn polygon
+  [processing state]
+  (reify canvas/ICanvas
+    (setup [_]
+      (canvas/size 640 360))
+    (draw [_ {:keys [frame-count width height]} _ _]
+      (canvas/background 102)
+      (canvas/push-matrix)
+      (canvas/translate (* 0.2 width) (* 0.5 height))
+      (canvas/rotate (/ frame-count 200.0))
+      (draw-polygon 0 0 82 3)
+      (canvas/pop-matrix)
+      ;;
+      (canvas/push-matrix)
+      (canvas/translate (* 0.5 width) (* 0.5 height))
+      (canvas/rotate (/ frame-count 50.0))
+      (draw-polygon 0 0 80 20)
+      (canvas/pop-matrix)
+      ;;
+      (canvas/push-matrix)
+      (canvas/translate (* 0.8 width) (* 0.5 height))
+      (canvas/rotate (/ frame-count -100.0))
+      (draw-polygon 0 0 70 7)
+      (canvas/pop-matrix))))
+
 (defn ^:export -main []
   (let [container (node [:div.container])]
     (dom/append! js/document.body container)
@@ -83,7 +121,9 @@
                          {:title "bezier"
                           :f bezier}
                          {:title "create graphics"
-                          :f create-graphics}]
+                          :f create-graphics}
+                         {:title "polygon"
+                          :f polygon}]
               :active nil}
       (fn [data owner]
         (let [code (html (into [:pre {:style {:width 640
@@ -134,7 +174,9 @@
                              ["bezier"]
                              (runner/htmlize "bezier")
                              ["create graphics"]
-                             (runner/htmlize "create-graphics"))
+                             (runner/htmlize "create-graphics")
+                             ["polygon"]
+                             (runner/htmlize "draw-polygon" "polygon"))
                            (concat
                             ["(" [:span.keyword "ns"] " my.namespace\n  "
                              [:span.constant "(:require"]

@@ -146,7 +146,9 @@
                           :focused (.-focused processing)
                           :online (.-online processing)
                           :screen (.-screen processing)
-                          :frame-count (.-frameCount processing)})
+                          :frame-count
+                          (set! (.-frameCount processing)
+                                (inc (.-frameCount processing)))})
                   (mouse processing)
                   (keyboard processing))))
     (set! (.-setup processing) (fn [] (setup canvas)))

@@ -44,7 +44,7 @@
          strokeWeight smooth noSmooth point vertex endShape bezierVertex
          curveVertex curve line bezier rect ellipse background image textWidth
          size ArrayList HashMap PVector ObjectIterator PConstants
-         defineProperty extendClassChain extendStaticMembers
+         defineProperty extendClassChain extendStaticMembers shape
          extendInterfaceMembers addMethod createJavaArray delay PrintWriter
          endRaw beginRaw createReader saveBytes selectInput endRecord
          saveStream beginRecord selectOutput createWriter dataPath
@@ -78,22 +78,32 @@
        (clojure.core/map str)
        (repeat 2)
        (apply clojure.core/map vector)
-       (filter (fn [[p1 p2]] (re-matches #"[A-Za-z]+" p1)))
        (clojure.core/map
-        (fn [[p1 p2]] [(clojure.string/replace p1 #"([A-Z])" "-$1") p2]))
-       (clojure.core/map
-        (fn [[p1 p2]] [(clojure.string/lower-case p1) p2]))
-       (remove (fn [[p1 p2]] (identical? (first p1) \-)))))
+        (fn [[p1 p2]]
+          [(if (and (re-matches #"[A-Za-z]+" p1)
+                    (not (every? (fn [char-code]
+                                   (and (>= char-code 65)
+                                        (<= char-code 92)))
+                                 (clojure.core/map clojure.core/int p1))))
+             (-> (clojure.string/replace p1 #"([A-Z])" "-$1")
+                 (clojure.string/lower-case))
+             p1) p2]))))
 
 (defn gen-processing-inline-accessor
   [[prop orig]]
   `(defmacro ~(symbol prop) [& args#]
      (let [orig# ~orig]
-       `(if (and (instance? js/Processing (first [~@args#]))
-                 ~(not (:arg (meta (first args#)))))
+       `(cond
+          (and (instance? js/Processing (first [~@args#]))
+               ~(not (:arg (meta (first args#)))))
           ((aget (first [~@args#]) ~orig#) ~@(rest args#))
+          (fn? (aget (js/Processing.getInstanceById
+                      (:active (deref processing-state))) ~orig#))
           ((aget (js/Processing.getInstanceById
-                  (:active (deref processing-state))) ~orig#) ~@args#)))))
+                  (:active (deref processing-state))) ~orig#) ~@args#)
+          :else
+          (aget (js/Processing.getInstanceById
+                 (:active (deref processing-state))) ~orig#)))))
 
 (defmacro gen-processing-inline-accessors []
   `(do ~@(clojure.core/map gen-processing-inline-accessor externs)))

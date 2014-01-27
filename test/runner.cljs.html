@@ -135,6 +135,44 @@
 </span>      <span class="comment-delimiter">;; </span><span class="comment">function is being called
 </span>      (canvas/image <span class="constant">^:arg</span> pg 120 60))))
 
+(<span class="keyword">defn</span> <span class="function-name">draw-polygon</span>
+  [x y radius npoints]
+  (<span class="keyword">let</span> [<span class="preprocessor">TWO_PI</span> (canvas/TWO_PI)
+        angle (<span class="builtin">/</span> <span class="preprocessor">TWO_PI</span> npoints)]
+    (canvas/begin-shape)
+    (<span class="keyword">loop</span> [a 0]
+      (<span class="keyword">when</span> (<span class="builtin">&lt;</span> a <span class="preprocessor">TWO_PI</span>)
+        (<span class="keyword">let</span> [sx (<span class="builtin">+</span> x (<span class="builtin">*</span> (<span class="preprocessor">Math/cos</span> a) radius))
+              sy (<span class="builtin">+</span> y (<span class="builtin">*</span> (<span class="preprocessor">Math/sin</span> a) radius))]
+          (canvas/vertex sx sy)
+          (<span class="keyword">recur</span> (<span class="builtin">+</span> a angle)))))
+    (canvas/end-shape (canvas/CLOSE))))
+
+(<span class="keyword">defn</span> <span class="function-name">polygon</span>
+  [processing state]
+  (<span class="builtin">reify</span> canvas/<span class="preprocessor">ICanvas</span>
+    (setup [_]
+      (canvas/size 640 360))
+    (draw [_ {<span class="constant">:keys</span> [frame-count width height]} _ _]
+      (canvas/background 102)
+      (canvas/push-matrix)
+      (canvas/translate (<span class="builtin">*</span> 0.2 width) (<span class="builtin">*</span> 0.5 height))
+      (canvas/rotate (<span class="builtin">/</span> frame-count 200.0))
+      (draw-polygon 0 0 82 3)
+      (canvas/pop-matrix)
+      <span class="comment-delimiter">;;</span><span class="comment">
+</span>      (canvas/push-matrix)
+      (canvas/translate (<span class="builtin">*</span> 0.5 width) (<span class="builtin">*</span> 0.5 height))
+      (canvas/rotate (<span class="builtin">/</span> frame-count 50.0))
+      (draw-polygon 0 0 80 20)
+      (canvas/pop-matrix)
+      <span class="comment-delimiter">;;</span><span class="comment">
+</span>      (canvas/push-matrix)
+      (canvas/translate (<span class="builtin">*</span> 0.8 width) (<span class="builtin">*</span> 0.5 height))
+      (canvas/rotate (<span class="builtin">/</span> frame-count -100.0))
+      (draw-polygon 0 0 70 7)
+      (canvas/pop-matrix))))
+
 (<span class="keyword">defn</span> <span class="constant">^:export</span> <span class="function-name">-main</span> []
   (<span class="keyword">let</span> [container (<span class="builtin">node</span> [<span class="constant">:div.container</span>])]
     (dom/append! js/document.body container)
@@ -144,7 +182,9 @@
                          {<span class="constant">:title</span> <span class="string">"bezier"</span>
                           <span class="constant">:f</span> bezier}
                          {<span class="constant">:title</span> <span class="string">"create graphics"</span>
-                          <span class="constant">:f</span> create-graphics}]
+                          <span class="constant">:f</span> create-graphics}
+                         {<span class="constant">:title</span> <span class="string">"polygon"</span>
+                          <span class="constant">:f</span> polygon}]
               <span class="constant">:active</span> nil}
       (<span class="keyword">fn</span> [data owner]
         (<span class="keyword">let</span> [code (html (<span class="builtin">into</span> [<span class="constant">:pre</span> {<span class="constant">:style</span> {<span class="constant">:width</span> 640
@@ -195,7 +235,9 @@
                              [<span class="string">"bezier"</span>]
                              (runner/htmlize <span class="string">"bezier"</span>)
                              [<span class="string">"create graphics"</span>]
-                             (runner/htmlize <span class="string">"create-graphics"</span>))
+                             (runner/htmlize <span class="string">"create-graphics"</span>)
+                             [<span class="string">"polygon"</span>]
+                             (runner/htmlize <span class="string">"draw-polygon"</span> <span class="string">"polygon"</span>))
                            (<span class="builtin">concat</span>
                             [<span class="string">"("</span> [<span class="constant">:span.keyword</span> <span class="string">"ns"</span>] <span class="string">" my.namespace\n  "</span>
                              [<span class="constant">:span.constant</span> <span class="string">"(:require"</span>]
