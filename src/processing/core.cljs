@@ -164,10 +164,11 @@
     (set! (.-touchCancel processing) (fn [] (touch-cancel canvas)))
     
     (reset! state (setup canvas))
-    
+
     (if (false? animate)
       ((.-draw processing))
-      (do (set! refresh-queued false)
+      (do ((.-draw processing))
+          (set! refresh-queued false)
           (if (exists? js/requestAnimationFrame)
             ((fn render []
                (when-not ^boolean refresh-queued

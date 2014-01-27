@@ -104,6 +104,28 @@
       (canvas/background 100)
       (draw-pie-chart 300 state))))
 
+(<span class="keyword">defn</span> <span class="function-name">create-graphics</span>
+  [processing state]
+  (<span class="builtin">reify</span> canvas/<span class="preprocessor">ICanvas</span>
+    (setup [_]
+      (canvas/size 640 360)
+      {<span class="constant">:pg</span> (canvas/create-graphics 400 200)})
+    (draw [_ {<span class="constant">:keys</span> [pg width height]} {<span class="constant">:keys</span> [x y]} _]
+      (canvas/fill 0 12)
+      (canvas/rect 0 0 width height)
+      (canvas/fill 255)
+      (canvas/no-stroke)
+      (canvas/ellipse x y 60 60)
+
+      (<span class="preprocessor">.beginDraw</span> pg)
+      (<span class="preprocessor">.background</span> pg 51)
+      (<span class="preprocessor">.noFill</span> pg)
+      (<span class="preprocessor">.stroke</span> pg 255)
+      (<span class="preprocessor">.ellipse</span> pg (<span class="builtin">-</span> x 120) (<span class="builtin">-</span> y 60) 60 60)
+      (<span class="preprocessor">.endDraw</span> pg)
+
+      (canvas/image pg 120 60))))
+
 (<span class="keyword">defn</span> <span class="constant">^:export</span> <span class="function-name">-main</span> []
   (<span class="keyword">let</span> [container (<span class="builtin">node</span> [<span class="constant">:div.container</span>])]
     (dom/append! js/document.body container)
@@ -111,7 +133,9 @@
                           <span class="constant">:f</span> pie-chart
                           <span class="constant">:animate</span> false}
                          {<span class="constant">:title</span> <span class="string">"bezier"</span>
-                          <span class="constant">:f</span> bezier}]
+                          <span class="constant">:f</span> bezier}
+                         {<span class="constant">:title</span> <span class="string">"create graphics"</span>
+                          <span class="constant">:f</span> create-graphics}]
               <span class="constant">:active</span> nil}
       (<span class="keyword">fn</span> [data owner]
         (<span class="keyword">let</span> [code (html (<span class="builtin">into</span> [<span class="constant">:pre</span> {<span class="constant">:style</span> {<span class="constant">:width</span> 640
@@ -146,22 +170,41 @@
                        [<span class="constant">:div.col-sm-10</span>
                         (<span class="keyword">if</span> (<span class="constant">:active</span> data)
                           (om/build canvas/canvas data)
-                          [<span class="constant">:canvas</span> {<span class="constant">:style</span> {<span class="constant">:width</span> 640
-                                            <span class="constant">:height</span> 360
-                                            <span class="constant">:background-color</span> <span class="string">"#000"</span>}}])
+                          [<span class="constant">:div</span> {<span class="constant">:style</span> {<span class="constant">:width</span> 640
+                                         <span class="constant">:height</span> 360
+                                         <span class="constant">:background-color</span> <span class="string">"#ddd"</span>
+                                         <span class="constant">:margin-bottom</span> <span class="string">"5px"</span>}}
+                           [<span class="constant">:blockquote.text-center</span>
+                            {<span class="constant">:style</span> {<span class="constant">:padding-top</span> <span class="string">"1em"</span>}}
+                            [<span class="constant">:p</span> <span class="string">"Click an example on the left to see it \n
+                                 in action."</span>]]])
                         (<span class="keyword">if-let</span> [title (<span class="constant">:title</span> (<span class="constant">:active</span> data))]
                           (<span class="keyword">-&gt;&gt;</span>
                            (match [title]
                              [<span class="string">"pie chart"</span>]
                              (runner/htmlize <span class="string">"draw-pie-chart"</span> <span class="string">"pie-chart"</span>)
                              [<span class="string">"bezier"</span>]
-                             (runner/htmlize <span class="string">"bezier"</span>))
+                             (runner/htmlize <span class="string">"bezier"</span>)
+                             [<span class="string">"create graphics"</span>]
+                             (runner/htmlize <span class="string">"create-graphics"</span>))
+                           (<span class="builtin">concat</span>
+                            [<span class="string">"("</span> [<span class="constant">:span.keyword</span> <span class="string">"ns"</span>] <span class="string">" my.namespace\n  "</span>
+                             [<span class="constant">:span.constant</span> <span class="string">"(:require"</span>]
+                             <span class="string">" [processing.core "</span> [<span class="constant">:span.constant</span> <span class="string">":as"</span>]
+                             <span class="string">" canvas "</span> [<span class="constant">:span.constant</span> <span class="string">":include-macros"</span>]
+                             <span class="string">" true]))\n\n"</span>])
                            (<span class="builtin">into</span> [<span class="constant">:pre</span> {<span class="constant">:style</span> {<span class="constant">:width</span> 640
                                                 <span class="constant">:border-radius</span> <span class="string">"0px"</span>
-                                                <span class="constant">:border</span> <span class="string">"none"</span>}}]))
-                          [<span class="constant">:pre</span> {<span class="constant">:style</span> {<span class="constant">:width</span> 640
+                                                <span class="constant">:border</span> <span class="string">"none"</span>}}]
+                                 ))
+                          (<span class="builtin">into</span> [<span class="constant">:pre</span> {<span class="constant">:style</span> {<span class="constant">:width</span> 640
                                          <span class="constant">:border-radius</span> <span class="string">"0px"</span>
-                                         <span class="constant">:border</span> <span class="string">"none"</span>}}])]]]])))))
+                                         <span class="constant">:border</span> <span class="string">"none"</span>}}]
+                                [<span class="string">"("</span> [<span class="constant">:span.keyword</span> <span class="string">"ns"</span>] <span class="string">" my.namespace\n  "</span>
+                                 [<span class="constant">:span.constant</span> <span class="string">"(:require"</span>]
+                                 <span class="string">" [processing.core "</span> [<span class="constant">:span.constant</span> <span class="string">":as"</span>]
+                                 <span class="string">" canvas "</span> [<span class="constant">:span.constant</span> <span class="string">":include-macros"</span>]
+                                 <span class="string">" true]))"</span>]))]]]])))))
       container)))
 </pre>
   </body>

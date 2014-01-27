@@ -54,11 +54,26 @@
 (defn create-graphics
   [processing state]
   (reify canvas/ICanvas
-    ))
+    (setup [_]
+      (canvas/size 640 360)
+      {:pg (canvas/create-graphics 400 200)})
+    (draw [_ {:keys [pg width height]} {:keys [x y]} _]
+      (canvas/fill 0 12)
+      (canvas/rect 0 0 width height)
+      (canvas/fill 255)
+      (canvas/no-stroke)
+      (canvas/ellipse x y 60 60)
 
-(defn example-ns
-  []
-  )
+      (canvas/begin-draw pg)
+      (canvas/background pg 51)
+      (canvas/no-fill pg)
+      (canvas/stroke pg 255)
+      (canvas/ellipse pg (- x 120) (- y 60) 60 60)
+      (canvas/end-draw pg)
+      ;; ^:arg metadata is added to disambiguate the first argument and ensure
+      ;; it is recognized as argument instead of the object upon which the
+      ;; function is being called
+      (canvas/image ^:arg pg 120 60))))
 
 (defn ^:export -main []
   (let [container (node [:div.container])]
@@ -67,7 +82,9 @@
                           :f pie-chart
                           :animate false}
                          {:title "bezier"
-                          :f bezier}]
+                          :f bezier}
+                         {:title "create graphics"
+                          :f create-graphics}]
               :active nil}
       (fn [data owner]
         (let [code (html (into [:pre {:style {:width 640
@@ -116,7 +133,9 @@
                              ["pie chart"]
                              (runner/htmlize "draw-pie-chart" "pie-chart")
                              ["bezier"]
-                             (runner/htmlize "bezier"))
+                             (runner/htmlize "bezier")
+                             ["create graphics"]
+                             (runner/htmlize "create-graphics"))
                            (concat
                             ["(" [:span.keyword "ns"] " my.namespace\n  "
                              [:span.constant "(:require"]
