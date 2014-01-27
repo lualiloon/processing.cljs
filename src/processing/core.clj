@@ -109,3 +109,6 @@
   `(do ~@(clojure.core/map gen-processing-inline-accessor externs)))
 
 (gen-processing-inline-accessors)
+
+
+

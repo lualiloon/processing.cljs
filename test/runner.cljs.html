@@ -173,6 +173,15 @@
       (draw-polygon 0 0 70 7)
       (canvas/pop-matrix))))
 
+(<span class="keyword">defn</span> <span class="function-name">3d-primitives</span>
+  [processing state]
+  (<span class="builtin">reify</span> canvas/<span class="preprocessor">ICanvas</span>
+    (setup [_]
+      (canvas/size 640 360)
+      (canvas/background 0)
+      (canvas/lights))
+    (draw [_ _ _ _])))
+
 (<span class="keyword">defn</span> <span class="constant">^:export</span> <span class="function-name">-main</span> []
   (<span class="keyword">let</span> [container (<span class="builtin">node</span> [<span class="constant">:div.container</span>])]
     (dom/append! js/document.body container)
@@ -184,7 +193,10 @@
                          {<span class="constant">:title</span> <span class="string">"create graphics"</span>
                           <span class="constant">:f</span> create-graphics}
                          {<span class="constant">:title</span> <span class="string">"polygon"</span>
-                          <span class="constant">:f</span> polygon}]
+                          <span class="constant">:f</span> polygon}
+                         {<span class="constant">:title</span> <span class="string">"3d primitives"</span>
+                          <span class="constant">:f</span> 3d-primitives
+                          <span class="constant">:animate</span> false}]
               <span class="constant">:active</span> nil}
       (<span class="keyword">fn</span> [data owner]
         (<span class="keyword">let</span> [code (html (<span class="builtin">into</span> [<span class="constant">:pre</span> {<span class="constant">:style</span> {<span class="constant">:width</span> 640
@@ -237,7 +249,9 @@
                              [<span class="string">"create graphics"</span>]
                              (runner/htmlize <span class="string">"create-graphics"</span>)
                              [<span class="string">"polygon"</span>]
-                             (runner/htmlize <span class="string">"draw-polygon"</span> <span class="string">"polygon"</span>))
+                             (runner/htmlize <span class="string">"draw-polygon"</span> <span class="string">"polygon"</span>)
+                             [<span class="string">"3d primitives"</span>]
+                             (runner/htmlize <span class="string">"3d-primitives"</span>))
                            (<span class="builtin">concat</span>
                             [<span class="string">"("</span> [<span class="constant">:span.keyword</span> <span class="string">"ns"</span>] <span class="string">" my.namespace\n  "</span>
                              [<span class="constant">:span.constant</span> <span class="string">"(:require"</span>]
@@ -246,8 +260,7 @@
                              <span class="string">" true]))\n\n"</span>])
                            (<span class="builtin">into</span> [<span class="constant">:pre</span> {<span class="constant">:style</span> {<span class="constant">:width</span> 640
                                                 <span class="constant">:border-radius</span> <span class="string">"0px"</span>
-                                                <span class="constant">:border</span> <span class="string">"none"</span>}}]
-                                 ))
+                                                <span class="constant">:border</span> <span class="string">"none"</span>}}]))
                           (<span class="builtin">into</span> [<span class="constant">:pre</span> {<span class="constant">:style</span> {<span class="constant">:width</span> 640
                                          <span class="constant">:border-radius</span> <span class="string">"0px"</span>
                                          <span class="constant">:border</span> <span class="string">"none"</span>}}]

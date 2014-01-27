@@ -1,7 +1,10 @@
 (ns processing.core
   (:require [om.core :as om :include-macros true]
-            [sablono.core :as html :refer [html] :include-macros true])
-  (:require-macros [processing.core :as canvas]))
+            [sablono.core :as html :refer [html] :include-macros true]
+            [cljs.core.async :as a :refer [put! take! <! >! chan alts!]])
+  (:require-macros [processing.core :as canvas]
+                   [cljs.core.async.macros :refer [go go-loop]])
+  (:import [goog.net ImageLoader]))
 
 (def processing-state (atom {:active nil}))
 
@@ -121,6 +124,38 @@
   (when raf
     (js/cancelAnimationFrame raf)
     (set! raf nil)))
+
+(def image-loader (ImageLoader.))
+
+(def image-chans (atom {}))
+
+(.listen image-loader "LOAD"
+         (fn [e]
+           (let [img (.-target e)]
+             (put! (get @image-chans (.-src img)) img
+                   (fn [_]
+                     (swap! image-chans dissoc (.-src img)))))))
+
+(defn preload
+  ([href]
+     (.addImage image-loader href href)
+     (.start image-loader)
+     (get (swap! image-chans assoc href (chan 1)) href))
+  ([href & hrefs]
+     (.addImage image-loader href href)
+     (get (swap! image-chans assoc href (chan 1)) href)
+     (doseq [href hrefs]
+       (.addImage image-loader href href)
+       (get (swap! image-chans assoc href (chan 1)) href))
+     (.start image-loader)
+     (go-loop [chans (vec (vals (select-keys @image-chans
+                                             (into [href] hrefs))))
+               imgs {}]
+       (if-let [[img ch] (alts! chans)]
+         (if (seq (disj (set chans) ch))
+           (recur (vec (disj (set chans) ch))
+                  (assoc imgs (.-src img) img))
+           imgs)))))
 
 (defn setup-and-draw
   [data owner node]

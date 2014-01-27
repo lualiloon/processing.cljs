@@ -112,6 +112,30 @@
       (draw-polygon 0 0 70 7)
       (canvas/pop-matrix))))
 
+(defn three-dee-primitives
+  [processing state]
+  (reify canvas/ICanvas
+    (setup [_]
+      (canvas/size 640 360 (canvas/P3D)))
+    (draw [_ {:keys [height]} _ _]
+      (canvas/background 0)
+      (canvas/lights)
+      ;;
+      (canvas/no-stroke)
+      (canvas/push-matrix)
+      (canvas/translate 130 (/ height 2) 0)
+      (canvas/rotate-y 1.25)
+      (canvas/rotate-x -0.4)
+      (canvas/box 100)
+      (canvas/pop-matrix)
+      ;;
+      (canvas/no-fill)
+      (canvas/stroke 255)
+      (canvas/push-matrix)
+      (canvas/translate 500 (* height 0.35) -200)
+      (canvas/sphere 280)
+      (canvas/pop-matrix))))
+
 (defn ^:export -main []
   (let [container (node [:div.container])]
     (dom/append! js/document.body container)
@@ -123,7 +147,10 @@
                          {:title "create graphics"
                           :f create-graphics}
                          {:title "polygon"
-                          :f polygon}]
+                          :f polygon}
+                         {:title "3d primitives"
+                          :f three-dee-primitives
+                          :animate false}]
               :active nil}
       (fn [data owner]
         (let [code (html (into [:pre {:style {:width 640
@@ -176,7 +203,9 @@
                              ["create graphics"]
                              (runner/htmlize "create-graphics")
                              ["polygon"]
-                             (runner/htmlize "draw-polygon" "polygon"))
+                             (runner/htmlize "draw-polygon" "polygon")
+                             ["3d primitives"]
+                             (runner/htmlize "three-dee-primitives"))
                            (concat
                             ["(" [:span.keyword "ns"] " my.namespace\n  "
                              [:span.constant "(:require"]
@@ -185,11 +214,10 @@
                              " true]))\n\n"])
                            (into [:pre {:style {:width 640
                                                 :border-radius "0px"
-                                                :border "none"}}]
-                                 ))
+                                                :border "none"}}]))
                           (into [:pre {:style {:width 640
-                                         :border-radius "0px"
-                                         :border "none"}}]
+                                               :border-radius "0px"
+                                               :border "none"}}]
                                 ["(" [:span.keyword "ns"] " my.namespace\n  "
                                  [:span.constant "(:require"]
                                  " [processing.core " [:span.constant ":as"]
