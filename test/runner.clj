@@ -5,6 +5,7 @@
             [cljs.env :as env]
             [cljs.core :as core]
             [hiccup.util :refer [escape-html]]
+            [hickory.core :as hickory]
             [clojure.java.io :as io])
   (:import [clojure.lang LineNumberingPushbackReader]))
 
@@ -42,9 +43,10 @@
           (let [re (re-find
                     #"<span class=\"function-name\">([\w-]+)</span>" text)
                 fn-name (second re)]
-            [fn-name text])))
+            [fn-name (map hickory/as-hiccup
+                          (hickory/parse-fragment text))])))
        (reduce (fn [m [fn-name text]] (assoc m fn-name text)) {})))
 
 (defmacro htmlize
   [& fns]
-  )
+  (reduce into [] (interpose "\n\n" (map #(get htmlized %) fns))))

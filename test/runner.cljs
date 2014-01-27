@@ -56,44 +56,57 @@
     (dom/append! js/document.body container)
     (om/root {:examples [{:title "pie chart"
                           :f pie-chart
-                          :animate false
-                          :code (runner/htmlize draw-pie-chart pie-chart)}
+                          :animate false}
                          {:title "bezier"
-                          :f bezier
-                          :code (runner/htmlize bezier)}]
+                          :f bezier}]
               :active nil}
       (fn [data owner]
-        (reify
-          om/IRenderState
-          (render-state [_ _]
-            (html [:div
-                   [:h1 "processing.cljs"]
-                   [:p "thin ClojureScript veneer over "
-                    [:a {:href "http://www.processingjs.org"}
-                     "processing.js"]]
-                   [:div#content
-                    [:h3 "usage "
-                     [:small "examples based on: "
-                      [:a {:href "http://processing.org/examples"}
-                       "http://processing.org/examples"]]]
-                    
-                    [:div.row
-                     [:div.col-sm-2
-                      [:ul.list-unstyled
-                       (for [{:keys [title f] :as example} (:examples data)]
-                         [:li
-                          [:a {:style {:cursor "pointer"}
-                               :on-click
-                               (fn [e]
-                                 (om/update! data assoc :active example))}
-                           [:h5 title]]])]]
-                     [:div.col-sm-10
-                      (if (:active data)
-                        (om/build canvas/canvas data)
-                        [:canvas {:style {:width 640
-                                          :height 360
-                                          :background-color "#000"}}])
-                      [:pre {:style {:width 640
-                                     :border-radius "0px"
-                                     :border "none"}}]]]]]))))
+        (let [code (html (into [:pre {:style {:width 640
+                                              :border-radius "0px"
+                                              :border "none"}}]
+                               (:code (:active data))))]
+          (reify
+            om/IRenderState
+            (render-state [_ _]
+              (html [:div
+                     [:h1 "processing.cljs"]
+                     [:p "thin ClojureScript veneer over "
+                      [:a {:href "http://www.processingjs.org"}
+                       "processing.js"]]
+                     [:div#content
+                      [:h3 "usage "
+                       [:small "examples based on: "
+                        [:a {:href "http://processing.org/examples"}
+                         "http://processing.org/examples"]]]
+                      
+                      [:div.row
+                       [:div.col-sm-2
+                        [:ul.list-unstyled
+                         (for [{:keys [title f code] :as example}
+                               (:examples data)]
+                           [:li
+                            [:a {:style {:cursor "pointer"}
+                                 :on-click
+                                 (fn [e]
+                                   (om/update! data assoc :active example))}
+                             [:h5 title]]])]]
+                       [:div.col-sm-10
+                        (if (:active data)
+                          (om/build canvas/canvas data)
+                          [:canvas {:style {:width 640
+                                            :height 360
+                                            :background-color "#000"}}])
+                        (if-let [title (:title (:active data))]
+                          (->>
+                           (match [title]
+                             ["pie chart"]
+                             (runner/htmlize "draw-pie-chart" "pie-chart")
+                             ["bezier"]
+                             (runner/htmlize "bezier"))
+                           (into [:pre {:style {:width 640
+                                                :border-radius "0px"
+                                                :border "none"}}]))
+                          [:pre {:style {:width 640
+                                         :border-radius "0px"
+                                         :border "none"}}])]]]])))))
       container)))
