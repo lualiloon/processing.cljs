@@ -150,6 +150,87 @@
       (canvas/image 0 (/ height 2) (/ (.-width img) 2) (/ (.-height img) 2))))
   )
 
+(defn initialize-cells
+  []
+  (let [arr (make-array 128)]
+    (loop [i 0]
+      (when (< i 128)
+        (aset arr i (make-array 72))
+        (recur (inc i))))
+    (loop [x 0 arr arr]
+      (when (< x 128)
+        (loop [y 0]
+          (when (< y 72)
+            (aset arr x y (if (> (rand 100) 15) 0 1))
+            (recur (inc y))))
+        (recur (inc x) arr)))
+    arr))
+
+(defn draw-grid
+  [{:keys [width height cell-size cells alive dead]}]
+  (loop [x 0]
+    (when (< x (/ width cell-size))
+      (loop [y 0]
+        (when (< y (/ height cell-size))
+          (if (== (aget cells x y) 1)
+            (canvas/fill alive)
+            (canvas/fill dead))
+          (canvas/rect (* x cell-size) (* y cell-size) cell-size cell-size)
+          (recur (inc y))))
+      (recur (inc x)))))
+
+(defn iteration
+  [state]
+  (let [{:keys [cells width height cell-size]} @state
+        cells-buffer (aclone cells)]
+    (loop [x 0]
+      (when (< x (/ width cell-size))
+        (let [neighbors
+              (loop [y 0 neighbors 0]
+                (if (< y (/ height cell-size))
+                  (->> (loop [xx (dec x) neighbors neighbors]
+                         (if (< xx (inc x))
+                           (->> (loop [yy (dec y) neighbors neighbors]
+                                  (if (< yy (inc y))
+                                    (if (and (>= xx 0)
+                                             (< xx (/ width cell-size))
+                                             (>= yy 0)
+                                             (< yy (/ height cell-size))
+                                             (not (and (== xx x) (== yy y)))
+                                             (== (aget cells-buffer xx yy) 1))
+                                      (recur (inc yy) (inc neighbors))
+                                      (recur (inc yy) neighbors))
+                                    neighbors))
+                                (recur (inc xx)))
+                           neighbors))
+                       (recur (inc y)))
+                  neighbors))]
+          (recur (inc x)))))))
+
+(defn conways-game-of-life
+  [processing state]
+  (reify canvas/ICanvas
+    (setup [_]
+      (canvas/size 640 360)
+      (canvas/stroke 48)
+      (canvas/no-smooth)
+      (canvas/background 0)
+      {:cell-size 5
+       :prob-alive 15
+       :interval 100
+       :last-time 0
+       :alive (canvas/color 0 200 0)
+       :dead (canvas/color 0)
+       :cells (initialize-cells)
+       :cells-buffer (initialize-cells)
+       :paused false})
+    (draw [_ {:keys [paused last-time interval] :as local-state} _ _]
+      (draw-grid local-state)
+      (when-not paused
+        (when (> (- (canvas/millis) last-time) interval)
+          (iteration state)
+          (swap! state update-in [:last-time] (canvas/millis)))))))
+
 (defn ^:export -main []
   (let [container (node [:div.container])]
     (dom/append! js/document.body container)
@@ -164,6 +245,9 @@
                           :f polygon}
                          {:title "load and display images"
                           :f load-and-display-images
+                          :animate false}
+                         {:title "conway's game of life"
+                          :f conways-game-of-life
                           :animate false}]
               :active nil}
       (fn [data owner]
@@ -226,7 +310,9 @@
                              ["3d primitives"]
                              (runner/htmlize "three-dee-primitives")
                              ["load and display images"]
-                             (runner/htmlize "load-and-display-images"))
+                             (runner/htmlize "load-and-display-images")
+                             ["conway's game of life"]
+                             (runner/htmlize "conways-game-of-life"))
                            (concat
                             ["(" [:span.keyword "ns"] " my.namespace\n  "
                              [:span.constant "(:require"]
