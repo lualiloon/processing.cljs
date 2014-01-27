@@ -22,7 +22,7 @@
       (canvas/size 640 360)
       (canvas/stroke 255)
       (canvas/no-fill))
-    (draw [_ _ {:keys [x] :as mouse} {:keys [key key-code] :as kb}]
+    (draw [_ _ {:keys [x] :as mouse} _]
       (canvas/background 0)
       (loop [i 0]
         (when (< i 200)
@@ -50,6 +50,15 @@
     (draw [_ state _ _]
       (canvas/background 100)
       (draw-pie-chart 300 state))))
+
+(defn create-graphics
+  [processing state]
+  (reify canvas/ICanvas
+    ))
+
+(defn example-ns
+  []
+  )
 
 (defn ^:export -main []
   (let [container (node [:div.container])]
@@ -93,9 +102,14 @@
                        [:div.col-sm-10
                         (if (:active data)
                           (om/build canvas/canvas data)
-                          [:canvas {:style {:width 640
-                                            :height 360
-                                            :background-color "#000"}}])
+                          [:div {:style {:width 640
+                                         :height 360
+                                         :background-color "#ddd"
+                                         :margin-bottom "5px"}}
+                           [:blockquote.text-center
+                            {:style {:padding-top "1em"}}
+                            [:p "Click an example on the left to see it \n
+                                 in action."]]])
                         (if-let [title (:title (:active data))]
                           (->>
                            (match [title]
@@ -103,10 +117,22 @@
                              (runner/htmlize "draw-pie-chart" "pie-chart")
                              ["bezier"]
                              (runner/htmlize "bezier"))
+                           (concat
+                            ["(" [:span.keyword "ns"] " my.namespace\n  "
+                             [:span.constant "(:require"]
+                             " [processing.core " [:span.constant ":as"]
+                             " canvas " [:span.constant ":include-macros"]
+                             " true]))\n\n"])
                            (into [:pre {:style {:width 640
                                                 :border-radius "0px"
-                                                :border "none"}}]))
-                          [:pre {:style {:width 640
+                                                :border "none"}}]
+                                 ))
+                          (into [:pre {:style {:width 640
                                          :border-radius "0px"
-                                         :border "none"}}])]]]])))))
+                                         :border "none"}}]
+                                ["(" [:span.keyword "ns"] " my.namespace\n  "
+                                 [:span.constant "(:require"]
+                                 " [processing.core " [:span.constant ":as"]
+                                 " canvas " [:span.constant ":include-macros"]
+                                 " true]))"]))]]]])))))
       container)))

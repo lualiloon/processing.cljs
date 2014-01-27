@@ -75,7 +75,7 @@
       (canvas/size 640 360)
       (canvas/stroke 255)
       (canvas/no-fill))
-    (draw [_ _ {<span class="constant">:keys</span> [x] <span class="constant">:as</span> mouse} {<span class="constant">:keys</span> [key key-code] <span class="constant">:as</span> kb}]
+    (draw [_ _ {<span class="constant">:keys</span> [x] <span class="constant">:as</span> mouse} _]
       (canvas/background 0)
       (<span class="keyword">loop</span> [i 0]
         (<span class="keyword">when</span> (<span class="builtin">&lt;</span> i 200)
@@ -109,46 +109,59 @@
     (dom/append! js/document.body container)
     (om/<span class="builtin">root</span> {<span class="constant">:examples</span> [{<span class="constant">:title</span> <span class="string">"pie chart"</span>
                           <span class="constant">:f</span> pie-chart
-                          <span class="constant">:animate</span> false
-                          <span class="constant">:code</span> (runner/htmlize draw-pie-chart pie-chart)}
+                          <span class="constant">:animate</span> false}
                          {<span class="constant">:title</span> <span class="string">"bezier"</span>
-                          <span class="constant">:f</span> bezier
-                          <span class="constant">:code</span> (runner/htmlize bezier)}]
+                          <span class="constant">:f</span> bezier}]
               <span class="constant">:active</span> nil}
       (<span class="keyword">fn</span> [data owner]
-        (<span class="builtin">reify</span>
-          om/<span class="preprocessor">IRenderState</span>
-          (render-state [_ _]
-            (html [<span class="constant">:div</span>
-                   [<span class="constant">:h1</span> <span class="string">"processing.cljs"</span>]
-                   [<span class="constant">:p</span> <span class="string">"thin ClojureScript veneer over "</span>
-                    [<span class="constant">:a</span> {<span class="constant">:href</span> <span class="string">"http://www.processingjs.org"</span>}
-                     <span class="string">"processing.js"</span>]]
-                   [<span class="constant">:div#content</span>
-                    [<span class="constant">:h3</span> <span class="string">"usage "</span>
-                     [<span class="constant">:small</span> <span class="string">"examples based on: "</span>
-                      [<span class="constant">:a</span> {<span class="constant">:href</span> <span class="string">"http://processing.org/examples"</span>}
-                       <span class="string">"http://processing.org/examples"</span>]]]
-                    
-                    [<span class="constant">:div.row</span>
-                     [<span class="constant">:div.col-sm-2</span>
-                      [<span class="constant">:ul.list-unstyled</span>
-                       (<span class="keyword">for</span> [{<span class="constant">:keys</span> [title f] <span class="constant">:as</span> example} (<span class="constant">:examples</span> data)]
-                         [<span class="constant">:li</span>
-                          [<span class="constant">:a</span> {<span class="constant">:style</span> {<span class="constant">:cursor</span> <span class="string">"pointer"</span>}
-                               <span class="constant">:on-click</span>
-                               (<span class="keyword">fn</span> [e]
-                                 (om/update! data assoc <span class="constant">:active</span> example))}
-                           [<span class="constant">:h5</span> title]]])]]
-                     [<span class="constant">:div.col-sm-10</span>
-                      (<span class="keyword">if</span> (<span class="constant">:active</span> data)
-                        (om/build canvas/canvas data)
-                        [<span class="constant">:canvas</span> {<span class="constant">:style</span> {<span class="constant">:width</span> 640
-                                          <span class="constant">:height</span> 360
-                                          <span class="constant">:background-color</span> <span class="string">"#000"</span>}}])
-                      [<span class="constant">:pre</span> {<span class="constant">:style</span> {<span class="constant">:width</span> 640
-                                     <span class="constant">:border-radius</span> <span class="string">"0px"</span>
-                                     <span class="constant">:border</span> <span class="string">"none"</span>}}]]]]]))))
+        (<span class="keyword">let</span> [code (html (<span class="builtin">into</span> [<span class="constant">:pre</span> {<span class="constant">:style</span> {<span class="constant">:width</span> 640
+                                              <span class="constant">:border-radius</span> <span class="string">"0px"</span>
+                                              <span class="constant">:border</span> <span class="string">"none"</span>}}]
+                               (<span class="constant">:code</span> (<span class="constant">:active</span> data))))]
+          (<span class="builtin">reify</span>
+            om/<span class="preprocessor">IRenderState</span>
+            (render-state [_ _]
+              (html [<span class="constant">:div</span>
+                     [<span class="constant">:h1</span> <span class="string">"processing.cljs"</span>]
+                     [<span class="constant">:p</span> <span class="string">"thin ClojureScript veneer over "</span>
+                      [<span class="constant">:a</span> {<span class="constant">:href</span> <span class="string">"http://www.processingjs.org"</span>}
+                       <span class="string">"processing.js"</span>]]
+                     [<span class="constant">:div#content</span>
+                      [<span class="constant">:h3</span> <span class="string">"usage "</span>
+                       [<span class="constant">:small</span> <span class="string">"examples based on: "</span>
+                        [<span class="constant">:a</span> {<span class="constant">:href</span> <span class="string">"http://processing.org/examples"</span>}
+                         <span class="string">"http://processing.org/examples"</span>]]]
+                      
+                      [<span class="constant">:div.row</span>
+                       [<span class="constant">:div.col-sm-2</span>
+                        [<span class="constant">:ul.list-unstyled</span>
+                         (<span class="keyword">for</span> [{<span class="constant">:keys</span> [title f code] <span class="constant">:as</span> example}
+                               (<span class="constant">:examples</span> data)]
+                           [<span class="constant">:li</span>
+                            [<span class="constant">:a</span> {<span class="constant">:style</span> {<span class="constant">:cursor</span> <span class="string">"pointer"</span>}
+                                 <span class="constant">:on-click</span>
+                                 (<span class="keyword">fn</span> [e]
+                                   (om/update! data assoc <span class="constant">:active</span> example))}
+                             [<span class="constant">:h5</span> title]]])]]
+                       [<span class="constant">:div.col-sm-10</span>
+                        (<span class="keyword">if</span> (<span class="constant">:active</span> data)
+                          (om/build canvas/canvas data)
+                          [<span class="constant">:canvas</span> {<span class="constant">:style</span> {<span class="constant">:width</span> 640
+                                            <span class="constant">:height</span> 360
+                                            <span class="constant">:background-color</span> <span class="string">"#000"</span>}}])
+                        (<span class="keyword">if-let</span> [title (<span class="constant">:title</span> (<span class="constant">:active</span> data))]
+                          (<span class="keyword">-&gt;&gt;</span>
+                           (match [title]
+                             [<span class="string">"pie chart"</span>]
+                             (runner/htmlize <span class="string">"draw-pie-chart"</span> <span class="string">"pie-chart"</span>)
+                             [<span class="string">"bezier"</span>]
+                             (runner/htmlize <span class="string">"bezier"</span>))
+                           (<span class="builtin">into</span> [<span class="constant">:pre</span> {<span class="constant">:style</span> {<span class="constant">:width</span> 640
+                                                <span class="constant">:border-radius</span> <span class="string">"0px"</span>
+                                                <span class="constant">:border</span> <span class="string">"none"</span>}}]))
+                          [<span class="constant">:pre</span> {<span class="constant">:style</span> {<span class="constant">:width</span> 640
+                                         <span class="constant">:border-radius</span> <span class="string">"0px"</span>
+                                         <span class="constant">:border</span> <span class="string">"none"</span>}}])]]]])))))
       container)))
 </pre>
   </body>
