@@ -174,8 +174,8 @@
           (reify
             om/IRenderState
             (render-state [_ _]
-              (html [:div
-                     [:header
+              (html [:div.row
+                     [:header.col-sm-12
                       [:h1 "processing.cljs"]
                       [:p "thin ClojureScript veneer over "
                        [:a {:href "http://www.processingjs.org"}
@@ -183,14 +183,14 @@
                       [:ul
                        [:li [:a {:href "https://github.com/aamedina/processing.cljs/zipball/master"} "Download " [:strong "ZIP File"]]]
                        [:li [:a {:href "https://github.com/aamedina/processing.cljs/tarball/master"} "Download " [:strong "TAR Ball"]]]
-                       [:li [:a {:href "https://github.com/aamedina/processing.cljs"} "View on " [:strong "GitHub"]]]]]           
-                     [:div#content
+                       [:li [:a {:href "https://github.com/aamedina/processing.cljs"} "View on " [:strong "GitHub"]]]]]
+                     [:div#content.col-sm-12
                       [:h3 "usage "
                        [:small "examples based on: "
                         [:a {:href "http://processing.org/examples"}
                          "http://processing.org/examples"]]]
                       
-                      [:div.row
+                      [:div.col-sm-12
                        [:div.col-sm-2
                         [:ul.list-unstyled
                          (for [{:keys [title f code] :as example}
