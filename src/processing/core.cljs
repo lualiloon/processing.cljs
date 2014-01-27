@@ -112,29 +112,31 @@
 
 (def raf nil)
 
-(defn render []
+(defn render [processing]
   (canvas/draw)
-  (set! raf (js/requestAnimationFrame render)))
+  (set! (.-frameCount processing) (inc (.-frameCount processing)))
+  (set! raf (js/requestAnimationFrame (fn [] (render processing)))))
 
-(defn start-animation []
+(defn start-animation [processing]
   (when-not raf
-    (render)))
+    (render processing)))
 
 (defn stop-animation []
   (when raf
     (js/cancelAnimationFrame raf)
-    (set! raf nil)))
+    (set! raf nil)
+    (canvas/exit)))
 
 (def image-loader (ImageLoader.))
 
 (def image-chans (atom {}))
 
-(.listen image-loader "LOAD"
-         (fn [e]
-           (let [img (.-target e)]
-             (put! (get @image-chans (.-src img)) img
-                   (fn [_]
-                     (swap! image-chans dissoc (.-src img)))))))
+;; (.listen image-loader "LOAD"
+;;          (fn [e]
+;;            (let [img (.-target e)]
+;;              (put! (get @image-chans (.-src img)) img
+;;                    (fn [_]
+;;                      (swap! image-chans dissoc (.-src img)))))))
 
 (defn preload
   ([href]
@@ -155,7 +157,7 @@
          (if (seq (disj (set chans) ch))
            (recur (vec (disj (set chans) ch))
                   (assoc imgs (.-src img) img))
-           imgs)))))
+           (assoc imgs (.-src img) img))))))
 
 (defn setup-and-draw
   [data owner node]
@@ -181,12 +183,17 @@
                           :focused (.-focused processing)
                           :online (.-online processing)
                           :screen (.-screen processing)
-                          :frame-count
-                          (set! (.-frameCount processing)
-                                (inc (.-frameCount processing)))})
+                          :frame-count (.-frameCount processing)})
                   (mouse processing)
                   (keyboard processing))))
-    (set! (.-setup processing) (fn [] (setup canvas)))
+    (set! (.-setup processing)
+          (fn []
+            (go (let [ret (setup canvas)]
+                  (if (satisfies? cljs.core.async.impl.protocols/ReadPort ret)
+                    (swap! state merge (<! ret))
+                    (swap! state merge ret))
+                  ((.-resetMatrix processing))
+                  ))))
     (set! (.-keyTyped processing)
           (fn [] (key-typed canvas (keyboard processing))))
     (set! (.-keyReleased processing)
@@ -213,16 +220,15 @@
     (set! (.-touchEnd processing) (fn [] (touch-end canvas)))
     (set! (.-touchMove processing) (fn [] (touch-move canvas)))
     (set! (.-touchCancel processing) (fn [] (touch-cancel canvas)))
-    
-    (reset! state (setup canvas))
 
-    (if (false? animate)
-      (canvas/draw)
-      (if (exists? js/requestAnimationFrame)
-        (start-animation)
-        ((fn render []
-           (canvas/draw)
-           (js/setTimeout 16 render)))))))
+    (go (<! (canvas/setup))
+        (if (false? animate)
+          (canvas/draw)
+          (if (exists? js/requestAnimationFrame)
+            (start-animation processing)
+            ((fn render []
+               (canvas/draw)
+               (js/setTimeout 16 render))))))))
 
 (defn canvas
   [data owner]

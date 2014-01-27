@@ -5,10 +5,12 @@
    [sablono.core :as html :refer [html] :include-macros true]
    [processing.core :as canvas :include-macros true]
    [cljs.core.match]
+   [cljs.core.async :as a :refer [<! >! chan put! take!]]
    [dommy.core :as dom])
   (:require-macros
    [dommy.macros :refer [node sel1]]
    [runner :as runner]
+   [cljs.core.async.macros :refer [go go-loop]]
    [cljs.core.match.macros :refer [match]]))
 
 (defn reset []
@@ -116,14 +118,13 @@
   [processing state]
   (reify canvas/ICanvas
     (setup [_]
-      (canvas/size 640 360 (canvas/P3D)))
-    (draw [_ {:keys [height]} _ _]
+      (canvas/size 640 360 (canvas/P3D))
       (canvas/background 0)
       (canvas/lights)
       ;;
       (canvas/no-stroke)
       (canvas/push-matrix)
-      (canvas/translate 130 (/ height 2) 0)
+      (canvas/translate 130 (/ 360 2) 0)
       (canvas/rotate-y 1.25)
       (canvas/rotate-x -0.4)
       (canvas/box 100)
@@ -132,9 +133,19 @@
       (canvas/no-fill)
       (canvas/stroke 255)
       (canvas/push-matrix)
-      (canvas/translate 500 (* height 0.35) -200)
+      (canvas/translate 500 (* 360 0.35) -200)
       (canvas/sphere 280)
-      (canvas/pop-matrix))))
+      (canvas/pop-matrix))
+    (draw [_ _ _ _]
+      (canvas/exit))))
+
+(defn load-and-display-images
+  [processing state]
+  (reify canvas/ICanvas
+    (setup [_]
+      (canvas/size 640 360)
+      (go {:img 1}))
+    (draw [_ _ _ _])))
 
 (defn ^:export -main []
   (let [container (node [:div.container])]
@@ -161,10 +172,15 @@
             om/IRenderState
             (render-state [_ _]
               (html [:div
-                     [:h1 "processing.cljs"]
-                     [:p "thin ClojureScript veneer over "
-                      [:a {:href "http://www.processingjs.org"}
-                       "processing.js"]]
+                     [:header
+                      [:h1 "processing.cljs"]
+                      [:p "thin ClojureScript veneer over "
+                       [:a {:href "http://www.processingjs.org"}
+                        "processing.js"]]
+                      [:ul
+                       [:li [:a {:href "https://github.com/aamedina/processing.cljs/zipball/master"} "Download " [:strong "ZIP File"]]]
+                       [:li [:a {:href "https://github.com/aamedina/processing.cljs/tarball/master"} "Download " [:strong "TAR Ball"]]]
+                       [:li [:a {:href "https://github.com/aamedina/processing.cljs"} "View on " [:strong "GitHub"]]]]]           
                      [:div#content
                       [:h3 "usage "
                        [:small "examples based on: "
