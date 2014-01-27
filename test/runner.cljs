@@ -63,7 +63,6 @@
       (canvas/fill 255)
       (canvas/no-stroke)
       (canvas/ellipse x y 60 60)
-
       (canvas/begin-draw pg)
       (canvas/background pg 51)
       (canvas/no-fill pg)

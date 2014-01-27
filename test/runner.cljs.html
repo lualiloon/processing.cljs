@@ -14,6 +14,14 @@
         color: #DCDCCC;
         font-weight: bold;
       }
+      .comment {
+        /* font-lock-comment-face */
+        color: #7F9F7F;
+      }
+      .comment-delimiter {
+        /* font-lock-comment-delimiter-face */
+        color: #5F7F5F;
+      }
       .constant {
         /* font-lock-constant-face */
         color: #BFEBBF;
@@ -116,15 +124,16 @@
       (canvas/fill 255)
       (canvas/no-stroke)
       (canvas/ellipse x y 60 60)
-
-      (<span class="preprocessor">.beginDraw</span> pg)
-      (<span class="preprocessor">.background</span> pg 51)
-      (<span class="preprocessor">.noFill</span> pg)
-      (<span class="preprocessor">.stroke</span> pg 255)
-      (<span class="preprocessor">.ellipse</span> pg (<span class="builtin">-</span> x 120) (<span class="builtin">-</span> y 60) 60 60)
-      (<span class="preprocessor">.endDraw</span> pg)
-
-      (canvas/image pg 120 60))))
+      (canvas/begin-draw pg)
+      (canvas/background pg 51)
+      (canvas/no-fill pg)
+      (canvas/stroke pg 255)
+      (canvas/ellipse pg (<span class="builtin">-</span> x 120) (<span class="builtin">-</span> y 60) 60 60)
+      (canvas/end-draw pg)
+      <span class="comment-delimiter">;; </span><span class="comment">^:arg metadata is added to disambiguate the first argument and ensure
+</span>      <span class="comment-delimiter">;; </span><span class="comment">it is recognized as argument instead of the object upon which the
+</span>      <span class="comment-delimiter">;; </span><span class="comment">function is being called
+</span>      (canvas/image <span class="constant">^:arg</span> pg 120 60))))
 
 (<span class="keyword">defn</span> <span class="constant">^:export</span> <span class="function-name">-main</span> []
   (<span class="keyword">let</span> [container (<span class="builtin">node</span> [<span class="constant">:div.container</span>])]

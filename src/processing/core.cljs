@@ -107,7 +107,20 @@
   {:key (str (.-key processing))
    :key-code (.-keyCode processing)})
 
-(def refresh-queued false)
+(def raf nil)
+
+(defn render []
+  (canvas/draw)
+  (set! raf (js/requestAnimationFrame render)))
+
+(defn start-animation []
+  (when-not raf
+    (render)))
+
+(defn stop-animation []
+  (when raf
+    (js/cancelAnimationFrame raf)
+    (set! raf nil)))
 
 (defn setup-and-draw
   [data owner node]
@@ -119,9 +132,10 @@
     (assert (satisfies? ICanvas canvas)
             "Reified canvas must implement ICanvas")
     
-    (reset! processing-state {:active title})
+    (reset! processing-state
+            {:active (clojure.string/replace title #" " "-")})
     
-    (set! (.-name processing) title)
+    (set! (.-name processing) (clojure.string/replace title #" " "-"))
     (set! (.-draw processing)
           (fn []
             (draw canvas
@@ -166,18 +180,12 @@
     (reset! state (setup canvas))
 
     (if (false? animate)
-      ((.-draw processing))
-      (do ((.-draw processing))
-          (set! refresh-queued false)
-          (if (exists? js/requestAnimationFrame)
-            ((fn render []
-               (when-not ^boolean refresh-queued
-                         (js/requestAnimationFrame render)
-                         ((.-draw processing)))))
-            ((fn render []
-               (when-not ^boolean refresh-queued
-                         (js/setTimeout 16 render)
-                         ((.-draw processing))))))))))
+      (canvas/draw)
+      (if (exists? js/requestAnimationFrame)
+        (start-animation)
+        ((fn render []
+           (canvas/draw)
+           (js/setTimeout 16 render)))))))
 
 (defn canvas
   [data owner]
@@ -189,8 +197,9 @@
       om/IDidUpdate
       (did-update [_ _ _ _]
         (when-let [node (om/get-node owner "canvas")]
-          (set! refresh-queued true)
+          (stop-animation)
           (setup-and-draw data owner node)))
       om/IRenderState
       (render-state [_ state]
-        (html [:canvas {:id title :ref "canvas"}])))))
+        (html [:canvas {:id (clojure.string/replace title #" " "-")
+                        :ref "canvas"}])))))
