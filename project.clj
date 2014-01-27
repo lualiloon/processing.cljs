@@ -33,12 +33,9 @@
                            :optimizations :none}}
                {:id "examples"
                 :source-paths ["src" "test"]
-                :compiler {:output-to "resources/public/js/main.js"
+                :compiler {:output-to "js/main.js"
                            :optimizations :advanced
                            :pretty-print false
-                           :preamble
-                           ["react/react.min.js"
-                            "resources/public/js/processing-1.4.1.js"]
                            :externs
                            ["react/externs/react.js"
                             "resources/public/js/processing-1.4.1.js"]}}
