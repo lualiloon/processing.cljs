@@ -66,10 +66,12 @@
    [sablono.core <span class="constant">:as</span> html <span class="constant">:refer</span> [html] <span class="constant">:include-macros</span> true]
    [processing.core <span class="constant">:as</span> canvas <span class="constant">:include-macros</span> true]
    [cljs.core.match]
+   [cljs.core.async <span class="constant">:as</span> a <span class="constant">:refer</span> [&lt;! &gt;! chan put! take!]]
    [dommy.core <span class="constant">:as</span> dom])
   (<span class="constant">:require-macros</span>
    [dommy.macros <span class="constant">:refer</span> [node sel1]]
    [runner <span class="constant">:as</span> runner]
+   [cljs.core.async.macros <span class="constant">:refer</span> [go go-loop]]
    [cljs.core.match.macros <span class="constant">:refer</span> [match]]))
 
 (<span class="keyword">defn</span> <span class="function-name">reset</span> []
@@ -173,14 +175,41 @@
       (draw-polygon 0 0 70 7)
       (canvas/pop-matrix))))
 
-(<span class="keyword">defn</span> <span class="function-name">3d-primitives</span>
+(<span class="keyword">defn</span> <span class="function-name">three-dee-primitives</span>
+  [processing state]
+  (<span class="builtin">reify</span> canvas/<span class="preprocessor">ICanvas</span>
+    (setup [_]
+      (canvas/size 640 360 (canvas/P3D))
+      (canvas/background 0)
+      (canvas/lights)
+      <span class="comment-delimiter">;;</span><span class="comment">
+</span>      (canvas/no-stroke)
+      (canvas/push-matrix)
+      (canvas/translate 130 (<span class="builtin">/</span> 360 2) 0)
+      (canvas/rotate-y 1.25)
+      (canvas/rotate-x -0.4)
+      (canvas/box 100)
+      (canvas/pop-matrix)
+      <span class="comment-delimiter">;;</span><span class="comment">
+</span>      (canvas/no-fill)
+      (canvas/stroke 255)
+      (canvas/push-matrix)
+      (canvas/translate 500 (<span class="builtin">*</span> 360 0.35) -200)
+      (canvas/sphere 280)
+      (canvas/pop-matrix))
+    (draw [_ _ _ _])))
+
+(<span class="keyword">defn</span> <span class="function-name">load-and-display-images</span>
   [processing state]
   (<span class="builtin">reify</span> canvas/<span class="preprocessor">ICanvas</span>
     (setup [_]
       (canvas/size 640 360)
-      (canvas/background 0)
-      (canvas/lights))
-    (draw [_ _ _ _])))
+      {<span class="constant">:img</span>
+       (canvas/load-image <span class="string">"http://processing.org/examples/moonwalk.jpg"</span>)})
+    (draw [_ {<span class="constant">:keys</span> [img height]} _ _]
+      (canvas/image img 0 0)
+      (canvas/image 0 (<span class="builtin">/</span> height 2) (<span class="builtin">/</span> (<span class="preprocessor">.-width</span> img) 2) (<span class="builtin">/</span> (<span class="preprocessor">.-height</span> img) 2))))
+  )
 
 (<span class="keyword">defn</span> <span class="constant">^:export</span> <span class="function-name">-main</span> []
   (<span class="keyword">let</span> [container (<span class="builtin">node</span> [<span class="constant">:div.container</span>])]
@@ -194,8 +223,8 @@
                           <span class="constant">:f</span> create-graphics}
                          {<span class="constant">:title</span> <span class="string">"polygon"</span>
                           <span class="constant">:f</span> polygon}
-                         {<span class="constant">:title</span> <span class="string">"3d primitives"</span>
-                          <span class="constant">:f</span> 3d-primitives
+                         {<span class="constant">:title</span> <span class="string">"load and display images"</span>
+                          <span class="constant">:f</span> load-and-display-images
                           <span class="constant">:animate</span> false}]
               <span class="constant">:active</span> nil}
       (<span class="keyword">fn</span> [data owner]
@@ -207,10 +236,15 @@
             om/<span class="preprocessor">IRenderState</span>
             (render-state [_ _]
               (html [<span class="constant">:div</span>
-                     [<span class="constant">:h1</span> <span class="string">"processing.cljs"</span>]
-                     [<span class="constant">:p</span> <span class="string">"thin ClojureScript veneer over "</span>
-                      [<span class="constant">:a</span> {<span class="constant">:href</span> <span class="string">"http://www.processingjs.org"</span>}
-                       <span class="string">"processing.js"</span>]]
+                     [<span class="constant">:header</span>
+                      [<span class="constant">:h1</span> <span class="string">"processing.cljs"</span>]
+                      [<span class="constant">:p</span> <span class="string">"thin ClojureScript veneer over "</span>
+                       [<span class="constant">:a</span> {<span class="constant">:href</span> <span class="string">"http://www.processingjs.org"</span>}
+                        <span class="string">"processing.js"</span>]]
+                      [<span class="constant">:ul</span>
+                       [<span class="constant">:li</span> [<span class="constant">:a</span> {<span class="constant">:href</span> <span class="string">"https://github.com/aamedina/processing.cljs/zipball/master"</span>} <span class="string">"Download "</span> [<span class="constant">:strong</span> <span class="string">"ZIP File"</span>]]]
+                       [<span class="constant">:li</span> [<span class="constant">:a</span> {<span class="constant">:href</span> <span class="string">"https://github.com/aamedina/processing.cljs/tarball/master"</span>} <span class="string">"Download "</span> [<span class="constant">:strong</span> <span class="string">"TAR Ball"</span>]]]
+                       [<span class="constant">:li</span> [<span class="constant">:a</span> {<span class="constant">:href</span> <span class="string">"https://github.com/aamedina/processing.cljs"</span>} <span class="string">"View on "</span> [<span class="constant">:strong</span> <span class="string">"GitHub"</span>]]]]]           
                      [<span class="constant">:div#content</span>
                       [<span class="constant">:h3</span> <span class="string">"usage "</span>
                        [<span class="constant">:small</span> <span class="string">"examples based on: "</span>
@@ -251,7 +285,9 @@
                              [<span class="string">"polygon"</span>]
                              (runner/htmlize <span class="string">"draw-polygon"</span> <span class="string">"polygon"</span>)
                              [<span class="string">"3d primitives"</span>]
-                             (runner/htmlize <span class="string">"3d-primitives"</span>))
+                             (runner/htmlize <span class="string">"three-dee-primitives"</span>)
+                             [<span class="string">"load and display images"</span>]
+                             (runner/htmlize <span class="string">"load-and-display-images"</span>))
                            (<span class="builtin">concat</span>
                             [<span class="string">"("</span> [<span class="constant">:span.keyword</span> <span class="string">"ns"</span>] <span class="string">" my.namespace\n  "</span>
                              [<span class="constant">:span.constant</span> <span class="string">"(:require"</span>]
@@ -262,8 +298,8 @@
                                                 <span class="constant">:border-radius</span> <span class="string">"0px"</span>
                                                 <span class="constant">:border</span> <span class="string">"none"</span>}}]))
                           (<span class="builtin">into</span> [<span class="constant">:pre</span> {<span class="constant">:style</span> {<span class="constant">:width</span> 640
-                                         <span class="constant">:border-radius</span> <span class="string">"0px"</span>
-                                         <span class="constant">:border</span> <span class="string">"none"</span>}}]
+                                               <span class="constant">:border-radius</span> <span class="string">"0px"</span>
+                                               <span class="constant">:border</span> <span class="string">"none"</span>}}]
                                 [<span class="string">"("</span> [<span class="constant">:span.keyword</span> <span class="string">"ns"</span>] <span class="string">" my.namespace\n  "</span>
                                  [<span class="constant">:span.constant</span> <span class="string">"(:require"</span>]
                                  <span class="string">" [processing.core "</span> [<span class="constant">:span.constant</span> <span class="string">":as"</span>]
