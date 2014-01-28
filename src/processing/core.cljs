@@ -147,6 +147,7 @@
 (defn setup-and-draw
   [data owner node opts]
   (let [{:keys [title f animate]} opts
+        title (if (seq title) title "canvas")
         state (atom {})
         processing (js/Processing. node)
         canvas (f processing state)]
@@ -228,5 +229,7 @@
           (setup-and-draw data owner node opts)))
       om/IRenderState
       (render-state [_ _]
-        (html [:canvas {:id (str/replace title #" " "-")
+        (html [:canvas {:id (if (seq title)
+                              (str/replace title #" " "-")
+                              "canvas")
                         :ref "canvas"}])))))
