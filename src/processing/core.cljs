@@ -169,7 +169,7 @@
           (fn []
             (let [new-state
                   (draw canvas
-                        (merge data
+                        (merge @data
                                (om/get-state owner)
                                @state
                                {:width (.-width processing)
