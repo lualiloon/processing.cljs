@@ -162,7 +162,7 @@
     (swap! processing-state assoc-in [:active :processing] processing)
     (swap! processing-state assoc-in [:active :sketch] sketch)
 
-    (set! (.-name processing) (str/replace title #" " "-"))
+    (set! (.-name processing) title)
     (set! (.-draw processing)
           (fn []
             (draw canvas
@@ -220,7 +220,7 @@
                (js/setTimeout 16 render))))))))
 
 (defn canvas
-  [& {:keys [title f animate?] :as opts}]
+  [& {:keys [title f animate] :as opts}]
   (fn [data owner]
     (reify
       om/IDidMount
