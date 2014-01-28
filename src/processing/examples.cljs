@@ -25,6 +25,25 @@
       (canvas/background 50))
     (draw [_ _ _ _])))
 
+(defn transparency
+  [processing state]
+  (reify canvas/ICanvas
+    (setup [_]
+      (go (<! (canvas/preload "/img/moonwalk.jpg"))
+          (canvas/size 640 360)
+          (canvas/no-fill)
+          (canvas/stroke 255)
+          {:img (canvas/load-image "/img/moonwalk.jpg")
+           :offset 0
+           :easing 0.5}))
+    (draw [_ {:keys [img offset easing] :as state} {:keys [x]} _]
+      (canvas/image img 0 0)
+      (let [dx (- (- x (/ (.-width img) 2)) offset)
+            offset (+ offset (* dx easing))]
+        (canvas/tint 255 127)
+        (canvas/image img offset 0)
+        {:offset offset}))))
+
 (defn ^:export -main []
   (om/root {:examples [{:title "bezier" :f bezier}
                        {:title "create graphics" :f create-graphics}]}

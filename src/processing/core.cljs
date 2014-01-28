@@ -144,7 +144,7 @@
                sketch (get-in @processing-state [:active :sketch])]
            (set! (.-onload img) #(a/close! ret))
            (set! (.-src img) href)
-           (aset (.. sketch -imageCache -images) href img)
+           (.add (.-imageCache sketch) href img)
            (<! ret)
            img))))
 
@@ -169,7 +169,8 @@
           (fn []
             (let [new-state
                   (draw canvas
-                        (merge (om/get-state owner)
+                        (merge data
+                               (om/get-state owner)
                                @state
                                {:width (.-width processing)
                                 :height (.-height processing)

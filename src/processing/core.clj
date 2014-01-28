@@ -98,18 +98,21 @@
                ~(not (:arg (meta (first args#)))))
           ((aget (first [~@args#]) ~orig#) ~@(rest args#))
           (fn? (aget (if (js/Processing.getInstanceById
-                          (get-in @processing-state [:active :title]))
+                          (get-in (deref processing-state) [:active :title]))
                        (js/Processing.getInstanceById
-                        (get-in @processing-state [:active :title]))
+                        (get-in (deref processing-state) [:active :title]))
                        (aget js/Processing.instances 0)) ~orig#))
           ((aget (if (js/Processing.getInstanceById
-                      (get-in @processing-state [:active :title]))
-                   (js/Processing.getInstanceById (:active @processing-state))
+                      (get-in (deref processing-state) [:active :title]))
+                   (js/Processing.getInstanceById
+                    (get-in (deref processing-state) [:active :title]))
                    (aget js/Processing.instances 0)) ~orig#) ~@args#)
           :else
           (aget
-           (if (js/Processing.getInstanceById (:active @processing-state))
-             (js/Processing.getInstanceById (:active @processing-state))
+           (if (js/Processing.getInstanceById
+                (get-in (deref processing-state) [:active :title]))
+             (js/Processing.getInstanceById
+              (get-in (deref processing-state) [:active :title]))
              (aget js/Processing.instances 0)) ~orig#)))))
 
 (defmacro gen-processing-inline-accessors []
