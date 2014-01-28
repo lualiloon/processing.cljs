@@ -154,7 +154,7 @@
         title (if (seq title) (str/replace title #" " "-") "canvas")
         state (atom {})
         processing (js/Processing. node)
-        sketch (js/Processing.Sketch.)
+        sketch (.. processing -externals -sketch)
         canvas (f processing state)]
 
     (assert (satisfies? ICanvas canvas)
