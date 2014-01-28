@@ -140,9 +140,11 @@
 (defn preload
   ([href]
      (go (let [ret (chan 1)
-               img (js/Image.)]
+               img (js/Image.)
+               sketch (get-in @processing-state [:active :sketch])]
            (set! (.-onload img) #(a/close! ret))
            (set! (.-src img) href)
+           (aset (.. sketch -imageCache -images) href img)
            (<! ret)
            img))))
 
