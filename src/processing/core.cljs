@@ -13,7 +13,9 @@
 
 (enable-console-print!)
 
-(def processing-state (atom {:active nil}))
+(def processing-state (atom {:active {:processing nil
+                                      :sketch nil
+                                      :title nil}}))
 
 (defprotocol ICanvas
   (setup [canvas])
@@ -147,16 +149,18 @@
 (defn setup-and-draw
   [data owner node opts]
   (let [{:keys [title f animate]} opts
-        title (if (seq title) title "canvas")
+        title (if (seq title) (str/replace title #" " "-") "canvas")
         state (atom {})
         processing (js/Processing. node)
+        sketch (js/Processing.Sketch.)
         canvas (f processing state)]
 
     (assert (satisfies? ICanvas canvas)
             "Reified canvas must implement ICanvas")
 
-    (reset! processing-state
-            {:active (str/replace title #" " "-")})
+    (swap! processing-state assoc-in [:active :title] title)
+    (swap! processing-state assoc-in [:active :processing] processing)
+    (swap! processing-state assoc-in [:active :sketch] sketch)
 
     (set! (.-name processing) (str/replace title #" " "-"))
     (set! (.-draw processing)

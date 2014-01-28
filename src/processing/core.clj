@@ -98,12 +98,12 @@
                ~(not (:arg (meta (first args#)))))
           ((aget (first [~@args#]) ~orig#) ~@(rest args#))
           (fn? (aget (if (js/Processing.getInstanceById
-                          (:active @processing-state))
+                          (get-in @processing.core [:active :title]))
                        (js/Processing.getInstanceById
-                        (:active @processing-state))
+                        (get-in @processing.core [:active :title]))
                        (aget js/Processing.instances 0)) ~orig#))
           ((aget (if (js/Processing.getInstanceById
-                      (:active @processing-state))
+                      (get-in @processing.core [:active :title]))
                    (js/Processing.getInstanceById (:active @processing-state))
                    (aget js/Processing.instances 0)) ~orig#) ~@args#)
           :else
