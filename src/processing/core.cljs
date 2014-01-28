@@ -167,17 +167,21 @@
     (set! (.-name processing) title)
     (set! (.-draw processing)
           (fn []
-            (draw canvas
-                  (merge (om/get-state owner)
-                         @state
-                         {:width (.-width processing)
-                          :height (.-height processing)
-                          :focused (.-focused processing)
-                          :online (.-online processing)
-                          :screen (.-screen processing)
-                          :frame-count (.-frameCount processing)})
-                  (mouse processing)
-                  (keyboard processing))))
+            (let [new-state
+                  (draw canvas
+                        (merge (om/get-state owner)
+                               @state
+                               {:width (.-width processing)
+                                :height (.-height processing)
+                                :focused (.-focused processing)
+                                :online (.-online processing)
+                                :screen (.-screen processing)
+                                :frame-count (.-frameCount processing)})
+                        (mouse processing)
+                        (keyboard processing))]
+              (swap! state merge (if (map? new-state)
+                                   new-state
+                                   {})))))
     (set! (.-setup processing)
           (fn []
             (go (let [ret (setup canvas)]
