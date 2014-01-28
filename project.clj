@@ -18,9 +18,21 @@
                    :source-paths ["dev"]}}
   :plugins [[lein-cljsbuild "1.0.1"]]
   :cljsbuild {:builds
-              [{:source-paths ["src"]
+              [{:id "dev"
+                :source-paths ["src"]
                 :compiler {:output-to "resources/public/js/main.js"
                            :output-dir "resources/public/js/out"
                            :source-map "resources/public/js/main.js.map"
                            :source-map-path "resources/public/js/out"
-                           :optimizations :none}}]})
+                           :optimizations :none}}
+               {:id "prod"
+                :source-paths ["src"]
+                :compiler {:output-to "resources/public/js/main.js"
+                           :optimizations :advanced
+                           :pretty-print false
+                           :preamble
+                           ["react/react.min.js"
+                            "resources/public/js/processing-1.4.1.js"]
+                           :externs
+                           ["react/externs/react.js"
+                            "resources/public/js/processing-1.4.1.js"]}}]})

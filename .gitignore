@@ -13,7 +13,6 @@ closure
 .repl
 *.swp
 *.zip
-*main.js
 /resources/public/js/out
 /resources/public/js/out/*
 resources/public/js/out/*
