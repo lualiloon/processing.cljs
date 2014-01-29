@@ -33,7 +33,7 @@
           (recur (+ i 20)))))))
 
 (defn draw-pie-chart
-  [diameter {:keys [angles width height] :as state}]
+  [diameter {:keys [angles width height] :as state} {:keys [x y]}]
   (loop [i 0 last-angle 0]
     (when (< i (count angles))
       (canvas/fill (canvas/map i 0 (count angles) 0 255))
@@ -49,9 +49,9 @@
       (canvas/size 640 360)
       (canvas/no-stroke)
       {:angles [30 10 45 35 60 38 75 67]})
-    (draw [_ state _ _]
+    (draw [_ state mouse _]
       (canvas/background 100)
-      (draw-pie-chart 300 state))))
+      (draw-pie-chart 300 state mouse))))
 
 (defn create-graphics
   [processing state]
@@ -150,6 +150,25 @@
       (canvas/image 0 (/ height 2) (/ (.-width img) 2) (/ (.-height img) 2))))
   )
 
+(defn transparency
+  [processing state]
+  (reify canvas/ICanvas
+    (setup [_]
+      (go (<! (canvas/preload "/img/moonwalk.jpg"))
+          (canvas/size 640 360)
+          (canvas/no-fill)
+          (canvas/stroke 255)
+          {:img (canvas/load-image "/img/moonwalk.jpg")
+           :offset 0
+           :easing 0.5}))
+    (draw [_ {:keys [img offset easing] :as state} {:keys [x]} _]
+      (canvas/image img 0 0)
+      (let [dx (- (- x (/ (.-width img) 2)) offset)
+            offset (+ offset (* dx easing))]
+        (canvas/tint 255 127)
+        (canvas/image img offset 0)
+        {:offset offset}))))
+
 (defn initialize-cells
   []
   (let [arr (make-array 128)]
@@ -157,13 +176,13 @@
       (when (< i 128)
         (aset arr i (make-array 72))
         (recur (inc i))))
-    (loop [x 0 arr arr]
+    (loop [x 0]
       (when (< x 128)
         (loop [y 0]
           (when (< y 72)
             (aset arr x y (if (> (rand 100) 15) 0 1))
             (recur (inc y))))
-        (recur (inc x) arr)))
+        (recur (inc x))))
     arr))
 
 (defn draw-grid
@@ -181,31 +200,42 @@
 
 (defn iteration
   [state]
-  (let [{:keys [cells width height cell-size]} @state
-        cells-buffer (aclone cells)]
+  (let [{:keys [cells width height cell-size cells-buffer]} state]
     (loop [x 0]
       (when (< x (/ width cell-size))
-        (let [neighbors
-              (loop [y 0 neighbors 0]
-                (if (< y (/ height cell-size))
-                  (->> (loop [xx (dec x) neighbors neighbors]
-                         (if (< xx (inc x))
-                           (->> (loop [yy (dec y) neighbors neighbors]
-                                  (if (< yy (inc y))
-                                    (if (and (>= xx 0)
-                                             (< xx (/ width cell-size))
-                                             (>= yy 0)
-                                             (< yy (/ height cell-size))
-                                             (not (and (== xx x) (== yy y)))
-                                             (== (aget cells-buffer xx yy) 1))
-                                      (recur (inc yy) (inc neighbors))
-                                      (recur (inc yy) neighbors))
-                                    neighbors))
-                                (recur (inc xx)))
-                           neighbors))
-                       (recur (inc y)))
-                  neighbors))]
-          (recur (inc x)))))))
+        (loop [y 0]
+          (when (< y (/ height cell-size))
+            (aset cells-buffer x y (aget cells x y))
+            (recur (inc y))))
+        (recur (inc x))))
+    (loop [x 0]
+      (when (< x (/ width cell-size))
+        (loop [y 0]
+          (when (< y (/ height cell-size))
+            (let [neighbors
+                  (loop [xx (dec x) neighbors 0]
+                    (if (<= xx (inc x))
+                      (->> (loop [yy (dec y) neighbors neighbors]
+                             (if (<= yy (inc y))
+                               (if (and (and (>= xx 0)
+                                             (< xx (/ width cell-size)))
+                                        (and (>= yy 0)
+                                             (< yy (/ height cell-size)))
+                                        (not (and (== xx x) (== yy y)))
+                                        (== (aget cells-buffer xx yy) 1))
+                                 (recur (inc yy) (inc neighbors))
+                                 (recur (inc yy) neighbors))
+                               neighbors))
+                           (recur (inc xx)))
+                      neighbors))]
+              (if (== (aget cells x y) 1)
+                (when (or (< neighbors 2)
+                          (> neighbors 3))
+                  (aset cells x y 0))
+                (when (== neighbors 3)
+                  (aset cells x y 1))))            
+            (recur (inc y))))
+        (recur (inc x))))))
 
 (defn conways-game-of-life
   [processing state]
@@ -224,12 +254,10 @@
        :cells (initialize-cells)
        :cells-buffer (initialize-cells)
        :paused false})
-    (draw [_ {:keys [paused last-time interval] :as local-state} _ _]
-      (draw-grid local-state)
-      (when-not paused
-        (when (> (- (canvas/millis) last-time) interval)
-          (iteration state)
-          (swap! state update-in [:last-time] (canvas/millis)))))))
+    (draw [_ {:keys [paused last-time interval frame-count] :as state} _ _]
+      (when (== (js-mod frame-count 6) 0)
+        (draw-grid state)
+        (iteration state)))))
 
 (defn ^:export -main []
   (let [container (node [:div.container])]
@@ -243,12 +271,11 @@
                           :f create-graphics}
                          {:title "polygon"
                           :f polygon}
-                         {:title "load and display images"
-                          :f load-and-display-images
-                          :animate false}
+                         {:title "transparency"
+                          :f transparency}
                          {:title "conway's game of life"
                           :f conways-game-of-life
-                          :animate false}]
+                          :animate true}]
               :active nil}
       (fn [data owner]
         (let [code (html (into [:pre {:style {:width 640
@@ -312,7 +339,10 @@
                              ["load and display images"]
                              (runner/htmlize "load-and-display-images")
                              ["conway's game of life"]
-                             (runner/htmlize "conways-game-of-life"))
+                             (runner/htmlize "conways-game-of-life")
+                             ["transparency"]
+                             (runner/htmlize "transparency")
+                             :else nil)
                            (concat
                             ["(" [:span.keyword "ns"] " my.namespace\n  "
                              [:span.constant "(:require"]

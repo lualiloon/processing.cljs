@@ -23,6 +23,7 @@
                    :source-paths ["dev"]}}
   :plugins [[lein-cljsbuild "1.0.1"]]
   :source-paths ["src" "test"]
+  :hooks [leiningen.cljsbuild]
   :cljsbuild {:builds
               [{:id "dev"
                 :source-paths ["src" "test"]
