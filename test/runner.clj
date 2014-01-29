@@ -5,8 +5,10 @@
             [cljs.env :as env]
             [cljs.core :as core]
             [hiccup.util :refer [escape-html]]
+            [hickory.zip :as hzip]
             [hickory.core :as hickory]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [clojure.zip :as zip])
   (:import [clojure.lang LineNumberingPushbackReader]))
 
 (defn read-file
@@ -33,6 +35,21 @@
 
 (def forms (forms-map "test/runner.cljs"))
 
+(defn unescape-hiccup
+  "Change special characters into HTML character entities."
+  [root]
+  (loop [loc (hickory.zip/hiccup-zip root)]
+    (if (zip/end? loc)
+      (zip/root loc)
+      (if (string? (zip/node loc))
+        (recur (->> (-> (zip/node loc)
+                        (clojure.string/replace #"&amp;" "&")
+                        (clojure.string/replace #"&lt;" "<")
+                        (clojure.string/replace #"&gt;" ">")
+                        (clojure.string/replace #"&quot;" "\""))
+                    (zip/replace loc)))
+        (recur (zip/next loc))))))
+
 (def htmlized
   (->> (slurp "test/runner.cljs.html")
        (re-seq #"(?s)\(<span class=\"keyword\">defn</span> <span class=\"function-name\">[\w-]+</span>.+\)\n\n")
@@ -43,8 +60,11 @@
           (let [re (re-find
                     #"<span class=\"function-name\">([\w-]+)</span>" text)
                 fn-name (second re)]
-            [fn-name (map hickory/as-hiccup
-                          (hickory/parse-fragment text))])))
+            [fn-name (->> (hickory/parse-fragment text)
+                          (map hickory/as-hiccup)
+                          (map #(if (vector? %)
+                                  (unescape-hiccup %)
+                                  %)))])))
        (reduce (fn [m [fn-name text]] (assoc m fn-name text)) {})))
 
 (defmacro htmlize

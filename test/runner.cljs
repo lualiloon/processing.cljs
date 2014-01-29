@@ -1,7 +1,6 @@
 (ns runner
   (:require
    [clojure.browser.repl]
-   [processing]
    [om.core :as om :include-macros true]
    [sablono.core :as html :refer [html] :include-macros true]
    [processing.core :as canvas :include-macros true]
@@ -260,6 +259,96 @@
         (draw-grid state)
         (iteration state)))))
 
+(defn root
+  [data owner]
+  (let [code (html (into [:pre {:style {:width 640
+                                        :border-radius "0px"
+                                        :border "none"}}]
+                         (:code (:active data))))]
+    (reify
+      om/IRenderState
+      (render-state [_ _]
+        (html [:div.row
+               [:header.col-sm-12
+                [:h1 "processing.cljs"]
+                [:p "thin ClojureScript veneer over "
+                 [:a {:href "http://www.processingjs.org"}
+                  "processing.js"]]
+                [:ul
+                 [:li [:a {:href "https://github.com/aamedina/processing.cljs/zipball/master"} "Download " [:strong "ZIP File"]]]
+                 [:li [:a {:href "https://github.com/aamedina/processing.cljs/tarball/master"} "Download " [:strong "TAR Ball"]]]
+                 [:li [:a {:href "https://github.com/aamedina/processing.cljs"} "View on " [:strong "GitHub"]]]]]
+               [:div#content.col-sm-12
+                [:h3 "usage "
+                 [:small "examples based on: "
+                  [:a {:href "http://processing.org/examples"}
+                   "http://processing.org/examples"]]]                
+                [:div.col-sm-12
+                 [:div.col-sm-2
+                  [:ul.list-unstyled
+                   (for [{:keys [title f code] :as example}
+                         (:examples data)]
+                     [:li
+                      [:a {:style {:cursor "pointer"}
+                           :on-click
+                           (fn [e]
+                             (om/update! data assoc :active example))}
+                       [:h5 title]]])]]
+                 [:div.col-sm-10
+                  (if (:active data)
+                    (om/build canvas/canvas data)
+                    [:div {:style {:width 640
+                                   :height 360
+                                   :background-color "#ddd"
+                                   :margin-bottom "5px"}}
+                     [:blockquote.text-center
+                      {:style {:padding-top "1em"}}
+                      [:p "Click an example on the left to see it \n
+                                 in action."]]])
+                  (if-let [title (:title (:active data))]
+                    (->>
+                     (match [title]
+                       ["pie chart"]
+                       (runner/htmlize "draw-pie-chart" "pie-chart")
+                       ["bezier"]
+                       (runner/htmlize "bezier")
+                       ["create graphics"]
+                       (runner/htmlize "create-graphics")
+                       ["polygon"]
+                       (runner/htmlize "draw-polygon" "polygon")
+                       ["3d primitives"]
+                       (runner/htmlize "three-dee-primitives")
+                       ["load and display images"]
+                       (runner/htmlize "load-and-display-images")
+                       ["conway's game of life"]
+                       (runner/htmlize
+                        "initialize-cells"
+                        "draw-grid"
+                        "iteration"
+                        "conways-game-of-life")
+                       ["transparency"]
+                       (runner/htmlize "transparency")
+                       :else nil)
+                     (concat
+                      ["(" [:span.keyword "ns"] " my.namespace\n  "
+                       [:span.constant "(:require"]
+                       " [processing.core " [:span.constant ":as"]
+                       " canvas " [:span.constant ":include-macros"]
+                       " true]))\n\n"])
+                     (into [:pre {:style {:width 640
+                                          :border-radius "0px"
+                                          :border "none"}}]))
+                    (into [:pre {:style {:width 640
+                                         :border-radius "0px"
+                                         :border "none"}}]
+                          (concat
+                           ["(" [:span.keyword "ns"] " my.namespace\n  "
+                           [:span.constant "(:require"]
+                           " [processing.core " [:span.constant ":as"]
+                           " canvas " [:span.constant ":include-macros"]
+                           " true]))"]
+                           (runner/htmlize "root"))))]]]])))))
+
 (defn ^:export -main []
   (om/root {:examples [{:title "pie chart"
                         :f pie-chart
@@ -276,87 +365,5 @@
                         :f conways-game-of-life
                         :animate true}]
             :active nil}
-    (fn [data owner]
-      (let [code (html (into [:pre {:style {:width 640
-                                            :border-radius "0px"
-                                            :border "none"}}]
-                             (:code (:active data))))]
-        (reify
-          om/IRenderState
-          (render-state [_ _]
-            (html [:div.row
-                   [:header.col-sm-12
-                    [:h1 "processing.cljs"]
-                    [:p "thin ClojureScript veneer over "
-                     [:a {:href "http://www.processingjs.org"}
-                      "processing.js"]]
-                    [:ul
-                     [:li [:a {:href "https://github.com/aamedina/processing.cljs/zipball/master"} "Download " [:strong "ZIP File"]]]
-                     [:li [:a {:href "https://github.com/aamedina/processing.cljs/tarball/master"} "Download " [:strong "TAR Ball"]]]
-                     [:li [:a {:href "https://github.com/aamedina/processing.cljs"} "View on " [:strong "GitHub"]]]]]
-                   [:div#content.col-sm-12
-                    [:h3 "usage "
-                     [:small "examples based on: "
-                      [:a {:href "http://processing.org/examples"}
-                       "http://processing.org/examples"]]]
-                    
-                    [:div.col-sm-12
-                     [:div.col-sm-2
-                      [:ul.list-unstyled
-                       (for [{:keys [title f code] :as example}
-                             (:examples data)]
-                         [:li
-                          [:a {:style {:cursor "pointer"}
-                               :on-click
-                               (fn [e]
-                                 (om/update! data assoc :active example))}
-                           [:h5 title]]])]]
-                     [:div.col-sm-10
-                      (if (:active data)
-                        (om/build canvas/canvas data)
-                        [:div {:style {:width 640
-                                       :height 360
-                                       :background-color "#ddd"
-                                       :margin-bottom "5px"}}
-                         [:blockquote.text-center
-                          {:style {:padding-top "1em"}}
-                          [:p "Click an example on the left to see it \n
-                                 in action."]]])
-                      (if-let [title (:title (:active data))]
-                        (->>
-                         (match [title]
-                           ["pie chart"]
-                           (runner/htmlize "draw-pie-chart" "pie-chart")
-                           ["bezier"]
-                           (runner/htmlize "bezier")
-                           ["create graphics"]
-                           (runner/htmlize "create-graphics")
-                           ["polygon"]
-                           (runner/htmlize "draw-polygon" "polygon")
-                           ["3d primitives"]
-                           (runner/htmlize "three-dee-primitives")
-                           ["load and display images"]
-                           (runner/htmlize "load-and-display-images")
-                           ["conway's game of life"]
-                           (runner/htmlize "conways-game-of-life")
-                           ["transparency"]
-                           (runner/htmlize "transparency")
-                           :else nil)
-                         (concat
-                          ["(" [:span.keyword "ns"] " my.namespace\n  "
-                           [:span.constant "(:require"]
-                           " [processing.core " [:span.constant ":as"]
-                           " canvas " [:span.constant ":include-macros"]
-                           " true]))\n\n"])
-                         (into [:pre {:style {:width 640
-                                              :border-radius "0px"
-                                              :border "none"}}]))
-                        (into [:pre {:style {:width 640
-                                             :border-radius "0px"
-                                             :border "none"}}]
-                              ["(" [:span.keyword "ns"] " my.namespace\n  "
-                               [:span.constant "(:require"]
-                               " [processing.core " [:span.constant ":as"]
-                               " canvas " [:span.constant ":include-macros"]
-                               " true]))"]))]]]])))))
+    root
     (sel1 :#content)))
