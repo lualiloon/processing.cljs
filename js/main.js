@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /**
  * React v0.8.0
  *
@@ -1039,5 +1038,4 @@ null)," 360 0.35) -200)\n      (canvas/sphere 280)\n      (canvas/pop-matrix))\n
 null),"/"],null)," height 2) (",new Q(null,3,5,S,[Z,new m(null,1,[W,"builtin"],null),"/"],null)," (",new Q(null,3,5,S,[Z,new m(null,1,[W,"preprocessor"],null),".-width"],null)," img) 2) (",new Q(null,3,5,S,[Z,new m(null,1,[W,"builtin"],null),"/"],null)," (",new Q(null,3,5,S,[Z,new m(null,1,[W,"preprocessor"],null),".-height"],null)," img) 2))))\n  )"],null);if(r)throw xj;return null}catch(b){if(b instanceof Error){if(b===xj)throw Error([t("No matching clause: "),t(c)].join(""));throw b;}if(r)throw b;
 return null}}())):Md(new Q(null,2,5,S,[wg,new m(null,1,[ag,new m(null,3,[Nf,640,qg,"0px",Gf,"none"],null)],null)],null),new Q(null,9,5,S,["(",new Q(null,2,5,S,[Vf,"ns"],null)," my.namespace\n  ",new Q(null,2,5,S,[zg,"(:require"],null)," [processing.core ",new Q(null,2,5,S,[zg,":as"],null)," canvas ",new Q(null,2,5,S,[zg,":include-macros"],null)," true]))"],null))}()))}())))},kk.prototype.D=function(){return this.Wc},kk.prototype.F=function(b,c){return new kk(this.code,this.owner,this.data,this.container,
 this.sc,c)});return new kk(e,d,c,b,wk,null)},b)},yk=["runner","_main"],zk=aa;yk[0]in zk||!zk.execScript||zk.execScript("var "+yk[0]);for(var Ak;yk.length&&(Ak=yk.shift());){var Bk;if(Bk=!yk.length)Bk=void 0!==xk;Bk?zk[Ak]=xk:zk=zk[Ak]?zk[Ak]:zk[Ak]={}};
->>>>>>> 34f7c6189b45e9bc319818555d3c7c0f51a3dde7
 })();
