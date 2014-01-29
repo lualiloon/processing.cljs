@@ -7390,6 +7390,18 @@ pre {
   color: #DCDCCC;
 }
 
+.comment {
+  /* font-lock-comment-face */
+
+  color: #7F9F7F;
+}
+
+.comment-delimiter {
+  /* font-lock-comment-delimiter-face */
+
+  color: #5F7F5F;
+}
+
 .constant {
   /* font-lock-constant-face */
 
@@ -7412,10 +7424,10 @@ pre {
   color: #94BFF3;
 }
 
-.type {
-  /* font-lock-type-face */
+.string {
+  /* font-lock-string-face */
 
-  color: #7CB8BB;
+  color: #CC9393;
 }
 
 pre a {

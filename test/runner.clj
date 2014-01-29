@@ -42,12 +42,12 @@
     (if (zip/end? loc)
       (zip/root loc)
       (if (string? (zip/node loc))
-        (recur (->> (-> (zip/node loc)
-                        (clojure.string/replace #"&amp;" "&")
-                        (clojure.string/replace #"&lt;" "<")
-                        (clojure.string/replace #"&gt;" ">")
-                        (clojure.string/replace #"&quot;" "\""))
-                    (zip/replace loc)))
+        (recur (zip/next
+                (zip/edit loc #(-> %
+                                   (clojure.string/replace #"&amp;" "&")
+                                   (clojure.string/replace #"&lt;" "<")
+                                   (clojure.string/replace #"&gt;" ">")
+                                   (clojure.string/replace #"&quot;" "\"")))))
         (recur (zip/next loc))))))
 
 (def htmlized

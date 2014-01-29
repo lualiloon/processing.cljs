@@ -205,7 +205,7 @@
     (setup [_]
       (canvas/size 640 360)
       {<span class="constant">:img</span>
-      (canvas/load-image <span class="string">"http://processing.org/examples/moonwalk.jpg"</span>)})
+       (canvas/load-image <span class="string">"http://processing.org/examples/moonwalk.jpg"</span>)})
     (draw [_ {<span class="constant">:keys</span> [img height]} _ _]
       (canvas/image img 0 0)
       (canvas/image 0 (<span class="builtin">/</span> height 2) (<span class="builtin">/</span> (<span class="preprocessor">.-width</span> img) 2) (<span class="builtin">/</span> (<span class="preprocessor">.-height</span> img) 2))))
@@ -427,7 +427,7 @@
                         <span class="constant">:animate</span> true}]
             <span class="constant">:active</span> nil}
     root
-	    (sel1 <span class="constant">:#content</span>)))
+    (sel1 <span class="constant">:#content</span>)))
 </pre>
   </body>
 </html>
