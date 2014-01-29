@@ -44,9 +44,37 @@
         (canvas/image img offset 0)
         {:offset offset}))))
 
+(defn draw-word
+  [word size]
+  )
+
+(defn word-cloud
+  []
+  (reify canvas/ICanvas
+    (setup [_]
+      (canvas/size 640 360)
+      (canvas/color-mode (canvas/HSB) (canvas/TWO_PI) 1 1 1)
+      (canvas/rect-mode (canvas/CORNER))
+      (canvas/background (canvas/color 0 0 1))
+      (canvas/smooth)
+      {:words ["hello" "there" "my" "love"]
+       :min-size 48
+       :max-size 192
+       :least nil
+       :most nil})
+    (draw [_ {:keys [words min-size max-size least most]} _ _]
+      (go-loop [n 0]
+        (when (< n (count words))
+          (let [relsize
+                (canvas/map (count (nth words n)) last most min-size max-size)]
+            (draw-word (nth words n) relsize))
+          (recur (inc n)))))))
+
 (defn ^:export -main []
   (om/root {:examples [{:title "bezier" :f bezier}
-                       {:title "create graphics" :f create-graphics}]}
+                       {:title "create graphics" :f create-graphics}
+                       {:title "transparency" :f transparency}
+                       {:title "word cloud" :f word-cloud :animate false}]}
     (fn [data owner]
       (om/component
         (html [:div.container

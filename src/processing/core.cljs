@@ -169,8 +169,8 @@
           (fn []
             (let [new-state
                   (draw canvas
-                        (merge @data
-                               (om/get-state owner)
+                        (merge (om/get-state owner)
+                               @data
                                @state
                                {:width (.-width processing)
                                 :height (.-height processing)

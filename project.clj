@@ -16,6 +16,7 @@
                                   [enlive "1.1.4"]]
                    :plugins [[com.cemerick/austin "0.1.4-SNAPSHOT"]]
                    :source-paths ["dev"]}}
+  :hooks [leiningen.cljsbuild]
   :plugins [[lein-cljsbuild "1.0.1"]]
   :cljsbuild {:builds
               [{:source-paths ["src"]
