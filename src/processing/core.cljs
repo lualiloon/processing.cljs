@@ -1,5 +1,6 @@
 (ns processing.core
-  (:require [om.core :as om :include-macros true]
+  (:require [processing]
+            [om.core :as om :include-macros true]
             [sablono.core :as html :refer [html] :include-macros true]
             [cljs.core.async :as a :refer [put! take! <! >! chan alts!]]
             [cljs.core.async.impl.protocols :refer [ReadPort]])

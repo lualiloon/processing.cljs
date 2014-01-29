@@ -31,18 +31,25 @@
                            :output-dir "resources/public/js/out"
                            :source-map "resources/public/js/main.js.map"
                            :source-map-path "resources/public/js/out"
+                           :foreign-libs
+                           [{:file
+                             "resources/public/js/processing-1.4.1-api.min.js"
+                             :provides ["processing"]}]
                            :optimizations :none}}
                {:id "examples"
                 :source-paths ["src" "test"]
-                :compiler {:output-to "resources/public/js/main.js"
+                :compiler {:output-to "js/main.js"
                            :optimizations :advanced
                            :pretty-print false
                            :preamble
-                           ["react/react.min.js"
-                            "resources/public/js/processing-1.4.1.js"]
+                           ["react/react.min.js"]
+                           :foreign-libs
+                           [{:file
+                             "resources/public/js/processing-1.4.1-api.min.js"
+                             :provides ["processing"]}]
                            :externs
                            ["react/externs/react.js"
-                            "resources/public/js/processing-1.4.1.js"]}}
+                            "resources/public/js/externs.js"]}}
                {:id "prod"
                 :source-paths ["src"]
                 :compiler {:output-to "resources/public/js/main.js"
@@ -50,7 +57,7 @@
                            :pretty-print false
                            :preamble
                            ["react/react.min.js"
-                            "resources/public/js/processing-1.4.1.js"]
+                            "resources/public/js/processing-1.4.1-api.min.js"]
                            :externs
                            ["react/externs/react.js"
-                            "resources/public/js/processing-1.4.1.js"]}}]})
+                            "resources/public/js/processing-1.4.1-api.min.js"]}}]})
