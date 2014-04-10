@@ -3,8 +3,7 @@
             [om.core :as om :include-macros true]
             [sablono.core :as html :refer [html] :include-macros true]
             [dommy.core :as dom]
-            [processing.core :as canvas :include-macros true]
-            )
+            [processing.core :as canvas :include-macros true])
   (:require-macros [cljs.core.async.macros :as a :refer [go go-loop]]
                    [dommy.macros :refer [sel sel1 node deftemplate]]))
 
